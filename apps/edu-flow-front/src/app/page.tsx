@@ -1,3 +1,4 @@
+import { Navbar } from '@/components/navbar';
 import styles from './page.module.css';
 
 export default function Index() {
@@ -8,6 +9,7 @@ export default function Index() {
    */
   return (
     <div>
+      <Navbar />
       <h1 className={styles.title}>Welcome to Edu-Flow!</h1>
     </div>
   );

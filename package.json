@@ -7,6 +7,7 @@
   "dependencies": {
     "@tailwindcss/postcss": "^4.3.2",
     "next": "~16.1.6",
+    "next-auth": "^4.24.14",
     "postcss": "^8.5.16",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -53,5 +54,13 @@
     "tslib": "^2.3.0",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.40.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "nx",
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma"
+    ]
   }
 }

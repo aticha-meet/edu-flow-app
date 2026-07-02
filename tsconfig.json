@@ -8,6 +8,9 @@
     },
     {
       "path": "./apps/edu-flow-front"
+    },
+    {
+      "path": "./apps/edu-flow-backend"
     }
   ]
 }

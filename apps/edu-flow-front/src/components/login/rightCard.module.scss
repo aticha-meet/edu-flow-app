@@ -1,0 +1,160 @@
+/* ─── Right side: login card ─── */
+.loginCard {
+    width: 420px;
+    flex-shrink: 0;
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(99, 102, 241, 0.12);
+    border-radius: 24px;
+    padding: 48px 40px;
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.03),
+        0 8px 40px rgba(0, 0, 0, 0.5),
+        0 0 80px rgba(99, 102, 241, 0.06);
+    animation: cardEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+@keyframes cardEnter {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Card glow accent line */
+.loginCard::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 2px;
+    border-radius: 0 0 2px 2px;
+    background: linear-gradient(90deg, transparent, #6366f1, #8b5cf6, transparent);
+    opacity: 0.6;
+}
+
+.cardHeader {
+    text-align: center;
+    margin-bottom: 36px;
+}
+
+.cardTitle {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin: 0 0 8px 0;
+}
+
+.cardSubtitle {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin: 0;
+}
+
+/* ─── Google sign-in button ─── */
+.googleBtn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 24px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1e293b;
+    background: #f8fafc;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    font-family: inherit;
+}
+
+.googleBtn:hover {
+    background: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.googleBtn:active {
+    transform: translateY(0);
+}
+
+.googleIcon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+/* ─── Divider ─── */
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 28px 0;
+}
+
+.dividerLine {
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.dividerText {
+    font-size: 0.8rem;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+}
+
+/* ─── Info text ─── */
+.infoText {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #475569;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.infoLink {
+    color: #818cf8;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.15s ease;
+}
+
+.infoLink:hover {
+    color: #a5b4fc;
+}
+
+/* ─── Trust badges ─── */
+.trustBadges {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.trustBadge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: #475569;
+}
+
+.trustIcon {
+    color: #4ade80;
+    flex-shrink: 0;
+}
