@@ -55,3 +55,4 @@ test-output
 .env.local
 .env.*
 .env.local.*
+/generated/prisma

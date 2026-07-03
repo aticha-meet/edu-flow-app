@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id    String  @id @default(uuid())
+  email String  @unique
+  name  String?
+  role  Role    @default(STUDENT)
+
+  // Relation ลิงก์ไปยังตารางเฉพาะทาง
+  studentProfile TeacherProfile?
+  teacherProfile StudentProfile?
+  classes        Class[]         @relation("TeacherClasses") // สำหรับครูผู้สอน
+  enrollments    Enrollment[]
+}
+
+// 👩‍🏫 ตารางเก็บข้อมูลเฉพาะของครู
+model TeacherProfile {
+  id         String @id @default(uuid())
+  userId     String @unique
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department String // ภาควิชา เช่น Electrical Education
+}
+
+// 🧑‍🎓 ตารางเก็บข้อมูลเฉพาะของนักเรียน
+model StudentProfile {
+  id        String @id @default(uuid())
+  userId    String @unique
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  studentId String @unique // รหัสนักเรียน (ใส่เฉพาะตารางนี้ ครูจะไม่มีฟิลด์นี้แน่นอน)
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+// 2. ตารางคลาสเรียน (Class)
+model Class {
+  id          String   @id @default(uuid())
+  className   String
+  description String?
+  teacherId   String
+  createdAt   DateTime @default(now())
+
+  // Relation: เชื่อมโยงกลับไปหาครูผู้สอน
+  teacher     User         @relation("TeacherClasses", fields: [teacherId], references: [id])
+  // Relation: รายชื่อนักเรียนที่อยู่ในคลาสนี้
+  enrollments Enrollment[]
+}
+
+// 3. ตารางกลางสำหรับการจับคู่นักเรียนเข้าคลาส (Many-to-Many Enrollment)
+model Enrollment {
+  id         String   @id @default(uuid())
+  studentId  String
+  classId    String
+  enrolledAt DateTime @default(now())
+
+  student User  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  class   Class @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, classId]) // ป้องกันไม่ให้นักเรียนคนเดิมลงซ้ำในคลาสเดิม
+}

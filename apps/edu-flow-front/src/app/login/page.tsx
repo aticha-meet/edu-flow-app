@@ -4,13 +4,6 @@ import { RightCard } from '@/components/login/RightCard';
 import styles from './login.module.scss';
 
 export default function Login() {
-    const handleGoogleLogin = () => {
-        // TODO: Implement Google OAuth 2.0 flow
-        // This will redirect to Google OAuth consent screen
-        // and send the authorization code to the Express backend
-        console.log('Google Login clicked — OAuth flow will be implemented in Step 2');
-    };
-
     return (
         <div className={styles.loginPage}>
             {/* Animated background orbs */}

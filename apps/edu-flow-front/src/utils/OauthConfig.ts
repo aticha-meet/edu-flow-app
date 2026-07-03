@@ -23,10 +23,10 @@ export const authOptions = {
         }),
     ],
     pages: {
-        signIn: "/eduFlow/login", // 
+        signIn: "/login", // 
         // เปลี่ยนเส้นทางไปยังหน้าเข้าสู่ระบบที่กำหนดเอง
-        error: "/eduFlow/login", // เปลี่ยนเส้นทางไปยังหน้าเข้าสู่ระบบที่กำหนดเอง
-        signOut: "/eduFlow/login", // เปลี่ยนเส้นทางไปยังหน้าเข้าสู่ระบบที่กำหนดเอง
+        error: "/login", // เปลี่ยนเส้นทางไปยังหน้าเข้าสู่ระบบที่กำหนดเอง
+        signOut: "/login", // เปลี่ยนเส้นทางไปยังหน้าเข้าสู่ระบบที่กำหนดเอง
     },
     callbacks: {
         async jwt({ token, user, account }: any) {
@@ -55,21 +55,22 @@ export const authOptions = {
             return session;
         },
         async redirect({ url, baseUrl }: any) {
-            const resolvedUrl = new URL(url, baseUrl); // ปลอดภัยสุด
-            console.log(url, baseUrl);
-            console.log("Redirecting to:", resolvedUrl.href);
+            // ระบุ base URL เริ่มต้น ป้องกันค่า undefined
+            const nextAuthUrl = process.env.NEXT_PUBLIC_AUTH_URL || PAGE_PATH.NEXTAUTH_URL as string;
+            const resolvedUrl = new URL(url, nextAuthUrl);
 
-            if (resolvedUrl.href.startsWith(`${process.env.NEXTAUTH_URL}/callback/`)) {
+            // อนุญาตให้ redirect ภายใต้โดเมนเดียวกัน
+            if (resolvedUrl.origin === new URL(nextAuthUrl).origin) {
                 return resolvedUrl.href;
             }
 
+            // จัดการกรณีที่เป็น Relative Path (ขึ้นต้นด้วย /)
             if (url.startsWith("/")) {
-                return `${PAGE_PATH.CALLBACK}${url}`;
+                const targetBase = PAGE_PATH.NEXTAUTH_URL || nextAuthUrl;
+                return `${targetBase}${url}`;
             }
 
-            if (resolvedUrl.origin === baseUrl) return resolvedUrl.href;
-
-            return `${process.env.NEXTAUTH_URL}/`;
+            return `${nextAuthUrl}/login`;
         },
     },
     secret: process.env.NEXTAUTH_SECRET,

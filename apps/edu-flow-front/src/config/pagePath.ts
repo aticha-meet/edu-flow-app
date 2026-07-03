@@ -1,3 +1,3 @@
 export const PAGE_PATH = {
-    CALLBACK_URL : process.env.NEXTAUTH_URL ,
+    NEXTAUTH_URL : process.env.NEXT_PUBLIC_AUTH_URL as string,
 }

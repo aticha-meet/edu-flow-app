@@ -9,9 +9,12 @@
     "next": "~16.1.6",
     "next-auth": "^4.24.14",
     "postcss": "^8.5.16",
+    "prisma": "^6.19.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "tailwindcss": "^4.3.2"
+    "studio": "^0.13.5",
+    "tailwindcss": "^4.3.2",
+    "validate": "^5.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",

@@ -1,3 +1,4 @@
+import { ClientProvider } from '@/components/ClientProvider';
 import './global.css';
 import { Google_Sans_Flex } from 'next/font/google';
 
@@ -21,7 +22,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${googleSansFlex.variable}`}>
-        {children}
+        <ClientProvider>
+          {children}
+        </ClientProvider>
       </body>
     </html>
   )
