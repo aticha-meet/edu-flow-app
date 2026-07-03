@@ -20,8 +20,8 @@ model User {
   role  Role    @default(STUDENT)
 
   // Relation ลิงก์ไปยังตารางเฉพาะทาง
-  studentProfile TeacherProfile?
-  teacherProfile StudentProfile?
+  studentProfile StudentProfile?
+  teacherProfile TeacherProfile?
   classes        Class[]         @relation("TeacherClasses") // สำหรับครูผู้สอน
   enrollments    Enrollment[]
 }

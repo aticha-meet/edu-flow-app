@@ -1,0 +1,26 @@
+{
+  "name": "@edu-flow/edu-flow-api-e2e",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "implicitDependencies": [
+      "@edu-flow/edu-flow-api"
+    ],
+    "targets": {
+      "e2e": {
+        "executor": "@nx/jest:jest",
+        "outputs": [
+          "{projectRoot}/test-output/jest/coverage"
+        ],
+        "dependsOn": [
+          "@edu-flow/edu-flow-api:build",
+          "@edu-flow/edu-flow-api:serve"
+        ],
+        "options": {
+          "jestConfig": "apps/edu-flow-api-e2e/jest.config.cts",
+          "passWithNoTests": true
+        }
+      }
+    }
+  }
+}

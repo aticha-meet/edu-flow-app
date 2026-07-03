@@ -10,7 +10,10 @@
       "path": "./apps/edu-flow-front"
     },
     {
-      "path": "./apps/edu-flow-backend"
+      "path": "./apps/edu-flow-api-e2e"
+    },
+    {
+      "path": "./apps/edu-flow-api"
     }
   ]
 }

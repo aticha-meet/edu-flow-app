@@ -14,6 +14,15 @@ Use pnpm dlx
 pnpm dlx create-nx-workspace name --preset=next
 ```
 
+## Add Build Project
+```sh
+pnpm add -D @nx/framwork
+```
+EX.
+```sh
+pnpm add -D @nx/express 
+```
+
 ## Run tasks
 
 To run the dev server for your app, use:
