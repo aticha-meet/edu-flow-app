@@ -1,81 +1,106 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './callback.module.scss';
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL;
+
 const CallBackPage = () => {
-    // States for tracking different statuses
-    const [isLoading, setIsLoading] = useState(false)
     const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
     const [errorMessage, setErrorMessage] = useState<string>('');
-    const [countdown, setCountdown] = useState<number>(5);
+    const [countdown, setCountdown] = useState<number>(3);
     const router = useRouter();
+    const searchParams = useSearchParams();
 
-    // Check NextAuth session status
     useEffect(() => {
         let isMounted = true;
+
         const checkSession = async () => {
             try {
-                // Read error parameters from URL (e.g. callback?error=OAuthCallback)
-                const urlParams = new URLSearchParams(window.location.search);
-                const error = urlParams.get('error');
+                const urlError = new URLSearchParams(window.location.search).get('error');
+                // path ที่ middleware ส่งมาเพื่อ redirect กลับหลัง refresh สำเร็จ
+                const redirectPath = searchParams.get('redirect') || '/class';
 
-                if (error) {
+                // ── กรณี error จาก OAuth ──────────────────────────────────
+                if (urlError) {
                     if (isMounted) {
                         setStatus('error');
-                        setErrorMessage(error === 'AccessDenied'
-                            ? 'สิทธิ์การเข้าใช้งานถูกปฏิเสธ (Access Denied)'
-                            : `เกิดข้อผิดพลาด: ${error}`
+                        setErrorMessage(
+                            urlError === 'AccessDenied'
+                                ? 'สิทธิ์การเข้าใช้งานถูกปฏิเสธ (Access Denied)'
+                                : `เกิดข้อผิดพลาด: ${urlError}`
                         );
                     }
                     return;
                 }
 
-                // Call NextAuth session API to check authentication status
-                const res = await fetch('/api/auth/session');
-                if (res.ok) {
-                    const session = await res.json();
-                    if (session && Object.keys(session).length > 0) {
-                        if (isMounted) {
-                            setStatus('success');
-                        }
-                    } else {
-                        // Wait a bit and retry (in case session state is syncing)
-                        setTimeout(async () => {
-                            const retryRes = await fetch('/api/auth/session');
-                            const retrySession = await retryRes.json();
-                            if (retrySession && Object.keys(retrySession).length > 0) {
-                                if (isMounted) setStatus('success');
-                            } else {
-                                if (isMounted) {
-                                    setStatus('error');
-                                    setErrorMessage('ไม่พบข้อมูลเซสชัน โปรดเข้าสู่ระบบใหม่อีกครั้ง');
-                                }
-                            }
-                        }, 1500);
-                    }
-                } else {
+                // ── Step 1: ดึง session จาก next-auth ──────────────────────
+                const sessionRes = await fetch('/api/auth/session');
+                if (!sessionRes.ok) {
                     if (isMounted) {
                         setStatus('error');
                         setErrorMessage('ไม่สามารถเชื่อมต่อระบบยืนยันตัวตนได้');
                     }
+                    return;
+                }
+
+                const session = await sessionRes.json();
+                const hasSession = session && Object.keys(session).length > 0;
+
+                if (!hasSession) {
+                    if (isMounted) {
+                        setStatus('error');
+                        setErrorMessage('ไม่พบข้อมูลเซสชัน โปรดเข้าสู่ระบบใหม่อีกครั้ง');
+                    }
+                    return;
+                }
+
+                // ── Step 2: ส่ง refreshToken ไป backend เพื่อขอ ac_tk ──────
+                // backend จะ verify refreshToken กับ Google แล้ว set cookie ac_tk กลับมา
+                const refreshToken = session.refreshToken as string | undefined;
+
+                if (!refreshToken) {
+                    if (isMounted) {
+                        setStatus('error');
+                        setErrorMessage('ไม่พบ Refresh Token โปรดเข้าสู่ระบบใหม่');
+                    }
+                    return;
+                }
+
+                const tokenRes = await fetch(`${BACKEND_URL}/auth/refresh`, {
+                    method: 'POST',
+                    credentials: 'include', // ส่ง/รับ cookie ข้ามโดเมน
+                    headers: {
+                        'Authorization': `Bearer ${refreshToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (!tokenRes.ok) {
+                    if (isMounted) {
+                        setStatus('error');
+                        setErrorMessage('ไม่สามารถต่ออายุ Token ได้ โปรดเข้าสู่ระบบใหม่');
+                    }
+                    return;
+                }
+
+                // ── Step 3: สำเร็จ → redirect กลับหน้าเดิม ─────────────────
+                if (isMounted) {
+                    setStatus('success');
+                    setTimeout(() => router.push(redirectPath), 2000);
                 }
             } catch (err) {
+                console.error(err);
                 if (isMounted) {
                     setStatus('error');
                     setErrorMessage('เกิดข้อผิดพลาดในการตรวจสอบเซสชัน');
                 }
-            } finally {
-                setIsLoading(!isLoading)
             }
         };
 
         checkSession();
-
-        return () => {
-            isMounted = false;
-        };
+        return () => { isMounted = false; };
     }, []);
 
     // Countdown and Redirect Logic
@@ -84,9 +109,9 @@ const CallBackPage = () => {
 
         const timer = setInterval(() => {
             setCountdown((prev) => {
-                if (prev <= 1 || isLoading) {
+                if (prev <= 1) {
                     clearInterval(timer);
-                    router.push('/');
+                    router.push('/class');
                     return 0;
                 }
                 return prev - 1;

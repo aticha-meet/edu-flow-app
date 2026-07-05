@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import styles from '@/components/login/rightCard.module.scss'
 import { signIn } from 'next-auth/react'
+import { getListUsers } from '@/api/user/controller';
 
 export const RightCard = () => {
     const [isLoading, setIsLoading] = useState(false);
@@ -11,10 +12,11 @@ export const RightCard = () => {
             setIsLoading(true);
             setError("");
             const result = await signIn(provider, {
-                callbackUrl: "/callback",
+                callbackUrl: "/class",
                 redirect: false,
             });
-            console.log('Google login result:', result);
+            const users = await getListUsers('/users');
+            console.log(users);
         } catch (error) {
             console.error('Error during Google login:', error);
             setError("Failed to login with Google. Please try again.");
