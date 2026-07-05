@@ -7,6 +7,7 @@ declare module "next-auth" {
      */
     interface Session {
         accessToken?: string; // 💡 เพิ่มฟิลด์ accessToken เข้าไปใน Session
+        refreshToken?: string
         user: {
             id?: string;
             role?: string;
