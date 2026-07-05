@@ -66,6 +66,16 @@
     }
   },
   "dependencies": {
-    "express": "^4.21.2"
+    "@prisma/client": "^6.19.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "express": "^4.21.2",
+    "jose": "^6.2.3"
+  },
+  "devDependencies": {
+    "@types/cookie": "^1.0.0",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/jsonwebtoken": "^9.0.10"
   }
 }

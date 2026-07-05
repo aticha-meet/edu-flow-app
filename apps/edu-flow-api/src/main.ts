@@ -5,31 +5,25 @@ import AppRouter from './router';
 import { PATH_ENV } from './configs/pathEnv';
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
-
-// const ALLOW_ORIGIN_DOMAINS = [
-//   "http://localhost:3000",
-//   'http://[::1]'
-// ]
+// eslint-disable-next-line @nx/enforce-module-boundaries
+const cookieParser = require('cookie-parser');
 
 dotenv.config();
 
 const app = express();
 const PORT = PATH_ENV.PORT;
 
+// CORS ต้องระบุ origin ตรงๆ และเปิด credentials เพื่อให้ browser ส่ง cookie ได้
+app.use(cors({
+  origin: PATH_ENV.FRONT_URL || 'http://localhost:3000',
+  credentials: true, // สำคัญ: ต้องเปิดเพื่อรับ cookie จาก browser
+}));
+
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(bodyParser.json());
-app.use(express.json({ limit: '50mb' }))
-// app.use(cors({
-//   origin: function (origin, callback) {
-//     if (!origin || ALLOW_ORIGIN_DOMAINS.includes(origin)) {
-//       callback(null, true);
-//     }
-
-//     return callback(new Error('Not allowed by CORS'));
-//   },
-//   credentials: true
-// }));
+app.use(express.json({ limit: '50mb' }));
+app.use(cookieParser()); // อ่าน cookie จาก request ได้ผ่าน req.cookies
 
 app.use(AppRouter);
 

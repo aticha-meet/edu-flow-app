@@ -14,7 +14,10 @@ export default [
         'error',
         {
           enforceBuildableLibDependency: true,
-          allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$'],
+          allow: [
+            '^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$',
+            '@prisma/client', // Prisma client ใช้ร่วมกันได้ทุก app
+          ],
           depConstraints: [
             {
               sourceTag: '*',

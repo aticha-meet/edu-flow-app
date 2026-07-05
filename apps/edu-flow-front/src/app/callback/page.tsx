@@ -6,6 +6,7 @@ import styles from './callback.module.scss';
 
 const CallBackPage = () => {
     // States for tracking different statuses
+    const [isLoading, setIsLoading] = useState(false)
     const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
     const [errorMessage, setErrorMessage] = useState<string>('');
     const [countdown, setCountdown] = useState<number>(5);
@@ -23,8 +24,8 @@ const CallBackPage = () => {
                 if (error) {
                     if (isMounted) {
                         setStatus('error');
-                        setErrorMessage(error === 'AccessDenied' 
-                            ? 'สิทธิ์การเข้าใช้งานถูกปฏิเสธ (Access Denied)' 
+                        setErrorMessage(error === 'AccessDenied'
+                            ? 'สิทธิ์การเข้าใช้งานถูกปฏิเสธ (Access Denied)'
                             : `เกิดข้อผิดพลาด: ${error}`
                         );
                     }
@@ -65,6 +66,8 @@ const CallBackPage = () => {
                     setStatus('error');
                     setErrorMessage('เกิดข้อผิดพลาดในการตรวจสอบเซสชัน');
                 }
+            } finally {
+                setIsLoading(!isLoading)
             }
         };
 
@@ -81,7 +84,7 @@ const CallBackPage = () => {
 
         const timer = setInterval(() => {
             setCountdown((prev) => {
-                if (prev <= 1) {
+                if (prev <= 1 || isLoading) {
                     clearInterval(timer);
                     router.push('/');
                     return 0;
