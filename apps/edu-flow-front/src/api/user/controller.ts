@@ -20,3 +20,13 @@ export const getLoginUser = async (data: any) => {
         throw err;
     }
 }
+
+export const getTeachers = async () => {
+    try {
+        const request = await axiosInstance.get(`${PAGE_PATH.API_URL}/teachers`)
+        return request.data
+    } catch (err) {
+        console.log(err);
+        throw err;
+    }
+}

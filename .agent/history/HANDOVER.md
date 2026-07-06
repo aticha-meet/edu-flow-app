@@ -1,52 +1,118 @@
-# 📝 Handover Notes: สรุปสิ่งที่ทำไปวันนี้ (EduFlow)
-**วันที่:** 3 กรกฎาคม 2026
+# 📋 HANDOVER — สรุปสถานะโปรเจกต์ EduFlow (อัปเดต: 7 กรกฎาคม 2026)
 
-เอกสารนี้สรุปข้อผิดพลาดที่พบ วิธีแก้ปัญหา และสิ่งที่จำเป็นต้องทำต่อในวันพรุ่งนี้สำหรับการตั้งค่าระบบ Auth และ Database ของโปรเจกต์ **EduFlow**
-
----
-
-## 1. 🔑 ปัญหา Next-Auth & Callback URL (`undefined/callback`)
-* **ปัญหาที่พบ:** เกิด Error `INVALID_CALLBACK_URL_ERROR` และในบราวเซอร์จำคุกกี้ปลายทางเป็น `undefined/callback` ทำให้ล็อกอินไม่ผ่าน
-* **สาเหตุ:** 
-  1. ขาดตัวแปร `NEXTAUTH_URL` ในไฟล์ `.env` ของหน้าบ้าน ทำให้ Next-Auth เซ็ตเซสชันปลายทางเป็น `undefined`
-  2. การเรียกใช้ `process.env.NEXTAUTH_URL` ในคอมโพเนนต์ที่เป็น Client-side (`use client`) จะได้ผลลัพธ์เป็น `undefined` เสมอตามระบบความปลอดภัยของ Next.js
-* **สิ่งที่เราแก้ไขไป:**
-  * ปรับโครงสร้างไฟล์ [pagePath.ts](file:///F:/project-working/edu-flow/apps/edu-flow-front/src/config/pagePath.ts) ให้ใช้ตัวแปร `NEXT_PUBLIC_AUTH_URL` สำหรับหน้าบ้าน และซ่อน `NEXTAUTH_URL` ไว้เฉพาะในฝั่งหลังบ้าน
-  * เพิ่มค่าแนะนำสำหรับ `.env` หน้าบ้าน:
-    ```env
-    NEXTAUTH_URL=http://localhost:3000
-    NEXTAUTH_SECRET=your_secret_key_here
-    NEXT_PUBLIC_AUTH_URL=http://localhost:3000
-    ```
+เอกสารนี้ summarize สถานะล่าสุดของโปรเจกต์ EduFlow เพื่อ handover ระหว่าง session
 
 ---
 
-## 2. 🎨 การปรับปรุงหน้า Callback Page (`src/app/callback`)
-* **สิ่งที่เราทำ:**
-  * ย้ายการสไตล์อินไลน์ (Tailwind) ไปใช้ **SCSS Module** โดยสร้างไฟล์ [callback.module.scss](file:///F:/project-working/edu-flow/apps/edu-flow-front/src/app/callback/callback.module.scss) เพื่อให้โค้ดคลีนขึ้น
-  * เปลี่ยนข้อมูลแบรนด์เก่าจาก "Adapter CMS" -> **EduFlow**
-  * เปลี่ยนไอคอน Logo ให้ตรงกับหน้า Login (รูปหมวกปริญญา/เอกสารสี Indigo-Purple)
-  * เขียนโค้ดระบบเช็ก Session อัตโนมัติด้วยคำสั่ง `fetch('/api/auth/session')` เพื่อรอรับค่าสำเร็จ (Success) หรือแสดงข้อความผิดพลาด (Error) หากการล็อกอินผ่าน Google ล้มเหลว
+## ✅ สิ่งที่เสร็จแล้ว
+
+| Feature | ไฟล์หลัก | สถานะ |
+|---|---|---|
+| Google OAuth Login | `src/app/login/` | ✅ Done |
+| Callback + Token Exchange | `src/app/callback/page.tsx` | ✅ Done |
+| Middleware (route guard) | `src/middleware.ts` | ✅ Done |
+| Class List Page (UI) | `src/app/class/page.tsx` | ✅ Done |
+| Class List API (Backend) | `pkg/class/controller.ts` | ✅ Done |
+| Create Class Popup | `src/components/class/CreateClassPopup.tsx` | ✅ Done |
+| Teacher Dropdown ใน Create Class | `CreateClassPopup.tsx` + `class.module.scss` | ✅ Done (7 ก.ค.) |
+| getTeachers() API function | `src/api/user/controller.ts` | ✅ Done (7 ก.ค.) |
 
 ---
 
-## 3. 🧬 ปัญหา Schema Validation (`P1012` ใน Prisma)
-* **ปัญหาที่พบ:** ตาราง `User` ในฟิลด์ `classes` แจ้งเตือนว่าหาฝั่งตรงข้ามในตาราง `Class` ไม่เจอ
-* **แนวทางแก้ไขที่เราออกแบบร่วมกัน:**
-  * ต้องเพิ่มการจับคู่ `@relation("TeacherClasses")` ในตาราง `User`
-  * สลับฟิลด์โปรไฟล์ของครูและนักเรียนที่ถูกผูกไว้สลับประเภทกัน (`studentProfile` ชี้ไปที่ `StudentProfile` และ `teacherProfile` ชี้ไปที่ `TeacherProfile`)
-  * เปลี่ยนตัว Generator จาก `"prisma-client"` ไปเป็น `"prisma-client-js"`
+## 🔄 Flow การทำงานปัจจุบัน
+
+```
+User → /login (Google OAuth)
+     → /callback (exchange token → set ac_tk cookie)
+     → /class (แสดง class list จาก GET /class)
+               ↓
+         กด "สร้างรายวิชา"
+               ↓
+         CreateClassPopup เปิด
+               ↓
+         Fetch GET /teachers → แสดงชื่อ teacher ใน dropdown
+               ↓
+         POST /class → สร้างรายวิชา
+```
 
 ---
 
-## 4. 🗄️ ปัญหา Database Connection (`P1000` ใน Prisma)
-* **ปัญหาที่พบ:** ต่อฐานข้อมูลใน Docker ไม่สำเร็จและแจ้งเตือนสิทธิ์การเข้าใช้งาน (Authentication failed)
-* **สาเหตุที่ค้นพบ:** 
-  1. รหัสผ่านในคำสั่ง Docker รันระบุเป็น `mysecretpassword` แต่ใน `.env` ของโปรเจกต์ระบุเป็น `06102022`
-  2. **พอร์ต `5432` ชนกัน:** บนเครื่อง Windows ของท่านมีโปรแกรม PostgreSQL ปกติ (ติดตั้งแบบไม่ใช่ Docker) รันอยู่เบื้องหลัง (`postgres.exe` - PID 8056) แย่งสัญญาณพอร์ต `5432` ไป ทำให้ Prisma วิ่งไปต่อกับตัวเครื่องหลัก ไม่สามารถเชื่อมเข้าไปหา Docker ที่รันอยู่ได้
+## ❌ สิ่งที่ยังต้องทำต่อ
+
+### 🔴 สำคัญ (Blocking)
+
+1. **Backend — `POST /auth/refresh`**
+   - สร้าง `pkg/auth/` ใหม่ใน backend
+   - รับ `Authorization: Bearer <refreshToken>` จาก callback page
+   - verify กับ Google OAuth → ออก `ac_tk` JWT cookie ใหม่
+   - **เหตุผลที่ blocking:** ถ้า token หมดอายุ user จะถูก redirect loop
+
+### 🟡 ปานกลาง
+
+2. **Class Detail Page** — `/class/[id]`
+   - ดึงรายละเอียด class
+   - แสดงรายชื่อนักเรียนที่ enroll
+   - แสดง assignment list
+
+3. **Role-based UI**
+   - ปุ่ม "สร้างรายวิชา" ควรแสดงเฉพาะ `ADMIN` หรือ `TEACHER`
+   - `STUDENT` ควรเห็นเฉพาะ class ที่ enroll อยู่ (ปัจจุบัน backend แยก query ตาม role แล้ว แต่ frontend ยังไม่ซ่อน UI)
+
+### 🟢 เล็กน้อย
+
+4. **Next-Auth Type Extension**
+   - เพิ่ม `refreshToken?: string` และ `expiresAt?: number` ใน JWT interface
+   - ไฟล์: `src/types/next-auth.d.ts`
 
 ---
 
-## 📋 สิ่งที่ต้องทำต่อในวันพรุ่งนี้ (Next Steps)
-1. **Set cookie on website**
-   * เพิ่ม refesh token และ access token เพิ่มตรวจสอบว่าใช่คนที่เป็น User ไหม
+## 🗂️ โครงสร้างไฟล์สำคัญ
+
+```
+apps/edu-flow-front/src/
+├── api/
+│   ├── class/controller.ts      ← createClass, getListClasses
+│   └── user/controller.ts       ← getTeachers, getLoginUser, getListUsers
+├── app/
+│   ├── class/
+│   │   ├── page.tsx             ← Class list page
+│   │   └── class.module.scss
+│   ├── callback/page.tsx        ← Token exchange
+│   └── login/
+├── components/
+│   └── class/
+│       └── CreateClassPopup.tsx ← สร้างรายวิชา (มี teacher dropdown)
+├── config/
+│   ├── axiosConfig.ts
+│   └── pagePath.ts
+└── store/
+    └── userStore.ts
+
+apps/edu-flow-api/src/
+├── pkg/
+│   ├── class/          ← GET /class (by role), POST /class
+│   ├── teacher-profile/ ← GET /teachers, POST /teacher
+│   ├── student-profile/
+│   └── user/           ← POST /user/login
+├── middleware/
+│   └── checkToken.ts   ← handleRefreshToken middleware
+└── router.ts
+```
+
+---
+
+## 🔧 Environment Variables ที่ต้องมี
+
+### Frontend (`.env`)
+```env
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=<your_secret>
+NEXT_PUBLIC_AUTH_URL=http://localhost:3000
+NEXT_PUBLIC_ENDPOINT_URL=http://localhost:3001
+```
+
+### Backend (`.env`)
+```env
+DATABASE_URL=postgresql://...
+JWT_SECRET=<your_secret>
+```
