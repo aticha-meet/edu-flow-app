@@ -1,6 +1,7 @@
 import { Router } from "express";
-import { getListClasses } from "./controller";
+import { getListClasses, createClass } from "./controller";
 
-export const ClassRouter = Router();
+export const ClassRouter: Router = Router();
 
 ClassRouter.get("/class", getListClasses);
+ClassRouter.post("/class", createClass);

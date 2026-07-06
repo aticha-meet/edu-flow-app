@@ -23,14 +23,20 @@
     "paths": {
       "@/*": [
         "./src/*"
-      ]
+      ],
+      "@lib/*": [
+        "../../lib/*"
+      ],
     },
     "types": [
       "jest",
       "node"
     ],
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDirs": [
+      "src",
+      "../../lib"
+    ],
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
   "include": [
@@ -40,7 +46,8 @@
     "src/**/*.jsx",
     "../../apps/edu-flow-front/.next/types/**/*.ts",
     "../../dist/apps/edu-flow-front/.next/types/**/*.ts",
-    "next-env.d.ts"
+    "next-env.d.ts",
+    "../../lib"
   ],
   "exclude": [
     "out-tsc",

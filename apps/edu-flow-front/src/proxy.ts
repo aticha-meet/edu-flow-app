@@ -5,7 +5,7 @@ import type { NextRequest } from 'next/server';
 // Public paths ที่ไม่ต้องการ authentication
 const PUBLIC_PATHS = ['/login', '/callback', '/api/auth'];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     // 1. ตรวจสอบว่าเป็น public path หรือไม่

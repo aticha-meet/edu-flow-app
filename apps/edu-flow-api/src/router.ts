@@ -5,7 +5,7 @@ import { TeacherRouter } from "./pkg/teacher-profile/route";
 import { handleRefreshToken } from "./middleware/checkToken";
 import { ClassRouter } from "./pkg/class/route";
 
-const AppRouter = Router();
+const AppRouter: Router = Router();
 
 // User routes
 AppRouter.use(handleRefreshToken, UserRouter);

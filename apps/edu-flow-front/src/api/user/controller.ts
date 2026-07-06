@@ -10,3 +10,13 @@ export const getListUsers = async (url: string) => {
         throw err;
     }
 }
+
+export const getLoginUser = async (data: any) => {
+    try {
+        const request = await axiosInstance.post(`${PAGE_PATH.API_URL}/user/login`, data)
+        return request.data
+    } catch (err) {
+        console.log(err);
+        throw err;
+    }
+}

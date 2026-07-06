@@ -9,6 +9,15 @@ module.exports = {
       devtoolModuleFilenameTemplate: '[absolute-resource-path]',
     }),
   },
+
+  // 💡 แทรกบล็อกนี้เข้ามาเพื่อกรอง Warning จาก node_modules ทิ้งไป
+  ignoreWarnings: [
+    {
+      module: /node_modules/,
+      message: /Failed to parse source map/,
+    },
+  ],
+
   plugins: [
     new NxAppWebpackPlugin({
       target: 'node',

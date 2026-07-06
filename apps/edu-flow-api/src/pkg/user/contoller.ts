@@ -13,6 +13,20 @@ export async function getUsers(req: Request, res: Response) {
     }
 }
 
+export async function getUser(req: Request, res: Response) {
+    try {
+        const { email } = req.body;
+        const userData = await prisma.user.findUnique({
+            where: {
+                email: email
+            }
+        });
+        return res.status(200).json({ message: "Login Successfully", data: userData })
+    } catch (err) {
+        return res.status(500).json({ message: "Internal server error", error: err });
+    }
+}
+
 export async function getStudent(req: Request, res: Response) {
     try {
         // Fetch students from the database or any other source
@@ -22,6 +36,23 @@ export async function getStudent(req: Request, res: Response) {
             },
             include: {
                 studentProfile: true
+            }
+        });
+        return res.status(200).json({ message: "Students fetched successfully", data: students });
+    } catch (error) {
+        return res.status(500).json({ message: "Internal server error", error: error });
+    }
+}
+
+export async function getTeacher(req: Request, res: Response) {
+    try {
+        // Fetch students from the database or any other source
+        const students = await prisma.user.findMany({
+            where: {
+                role: "TEACHER"
+            },
+            include: {
+                teacherProfile: true
             }
         });
         return res.status(200).json({ message: "Students fetched successfully", data: students });
