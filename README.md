@@ -117,3 +117,28 @@ And join the Nx community:
 - [Our Youtube channel](https://www.youtube.com/@nxdevtools)
 - [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 
+
+## Deploy on docker server
+
+Create config dockerfile(.dockerfile) in select project path and create docker-compose.yml at root 
+when config complete. Run command :  
+
+```sh
+docker compose build web --no-cache --progress=plain
+```
+***This Command for build project with dockerfile***
+
+Run Docker containner with cmd.
+```sh
+docker compose up -d db (db = {name of service})
+```
+
+And when update docker compose run
+```sh
+docker compose up -d --force-recreate db
+```
+
+SSH to docker conatinner
+```sh
+docker exec -it edu-flow-api sh
+```

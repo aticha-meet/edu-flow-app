@@ -1,7 +1,7 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  web:            # ✅ indent 2 spaces ใต้ services
+  web: # ✅ indent 2 spaces ใต้ services
     build:
       context: .
       dockerfile: apps/edu-flow-front/Dockerfile
@@ -9,3 +9,43 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/edu-flow-api/Dockerfile
+      args:
+        DATABASE_URL: ${DOCKER_DATABASE_URL}
+    container_name: edu-flow-api
+    restart: unless-stopped
+    ports:
+      - "3333:3333"
+      - "5555:5555"
+    environment:
+      - DATABASE_URL=${DOCKER_DATABASE_URL}
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - apps/edu-flow-api/.env
+
+  db:
+    image: postgres:16-alpine
+    container_name: edu-flow-db
+    ports:
+      - "5433:5432"
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  db_data:

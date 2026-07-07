@@ -1,0 +1,45 @@
+# apps/edu-flow-api/Dockerfile
+FROM node:22-alpine AS base
+WORKDIR /repo
+
+RUN npm install -g pnpm@10
+RUN pnpm config set fetch-retries 5
+RUN pnpm config set network-timeout 300000
+
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json nx.json tsconfig.base.json ./
+
+COPY apps/edu-flow-api/package.json ./apps/edu-flow-api/package.json
+
+COPY prisma ./prisma
+COPY prisma.config.ts ./
+
+RUN pnpm install --frozen-lockfile
+
+ARG DOCKER_DATABASE_URL
+ENV DATABASE_URL=${DOCKER_DATABASE_URL}
+
+# generate prisma client ก่อน build เสมอ
+RUN pnpm exec prisma generate
+
+COPY . .
+
+ENV NX_DAEMON=false
+
+RUN pnpm exec nx build edu-flow-api --configuration=production --skip-nx-cache
+
+# ---- runtime stage ----
+FROM node:22-alpine AS runner
+WORKDIR /app
+
+RUN npm install -g pnpm@10
+
+# path ตรงนี้ต้องปรับตามผลลัพธ์จริงที่เจอ (dist/ หรือ apps/edu-flow-api/dist/)
+COPY --from=base /repo/apps/edu-flow-api/dist ./dist
+COPY --from=base /repo/node_modules ./node_modules
+COPY --from=base /repo/prisma ./prisma
+COPY --from=base /repo/package.json ./package.json
+
+EXPOSE 3333
+ENV PORT=3333
+
+CMD ["node", "dist/main.js"]
