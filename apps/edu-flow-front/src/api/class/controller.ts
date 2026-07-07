@@ -18,6 +18,8 @@ export const createClass = async (data: {
     description?: string;
     teacherId: string;
     role: string;
+    roomId: string;
+    status: 'upcoming' | 'active' | 'complete'
 }) => {
     try {
         const request = await axiosInstance.post(`${PAGE_PATH.API_URL}/class`, data);

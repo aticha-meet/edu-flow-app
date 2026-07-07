@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import styles from './createProfilePopup.module.scss'
 import { createTeacherProfile, createStudentProfile } from '@/api/profile/controller'
-import { getListUsers } from '@/api/user/controller'
+import { getListUsers, createUser } from '@/api/user/controller'
 
 type ProfileRole = 'teacher' | 'student'
 
@@ -17,9 +17,12 @@ export const CreateProfilePopup = ({ isOpen, onClose }: CreateProfilePopupProps)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [formError, setFormError] = useState('')
     const [formSuccess, setFormSuccess] = useState('')
+    const [isNewUser, setIsNewUser] = useState(true)
 
-    // Shared fields
+    // Shared User fields
     const [email, setEmail] = useState('')
+    const [name, setName] = useState('')
+    const [sureName, setSureName] = useState('')
 
     // Teacher-specific
     const [department, setDepartment] = useState('')
@@ -27,13 +30,12 @@ export const CreateProfilePopup = ({ isOpen, onClose }: CreateProfilePopupProps)
     // Student-specific
     const [studentId, setStudentId] = useState('')
 
-    // User list for selecting
+    // Existing User Selection
     const [users, setUsers] = useState<any[]>([])
     const [selectedUserId, setSelectedUserId] = useState('')
     const [isLoadingUsers, setIsLoadingUsers] = useState(false)
     const [hasLoadedUsers, setHasLoadedUsers] = useState(false)
 
-    // Fetch users when popup opens
     const loadUsers = async () => {
         if (hasLoadedUsers) return
         setIsLoadingUsers(true)
@@ -49,15 +51,16 @@ export const CreateProfilePopup = ({ isOpen, onClose }: CreateProfilePopupProps)
         }
     }
 
-    // Load users on first open
     useEffect(() => {
-        if (isOpen && !hasLoadedUsers && !isLoadingUsers) {
+        if (isOpen && !isNewUser && !hasLoadedUsers && !isLoadingUsers) {
             loadUsers()
         }
-    }, [isOpen, role]);
+    }, [isOpen, isNewUser, role])
 
     const resetForm = () => {
         setEmail('')
+        setName('')
+        setSureName('')
         setDepartment('')
         setStudentId('')
         setSelectedUserId('')
@@ -84,34 +87,51 @@ export const CreateProfilePopup = ({ isOpen, onClose }: CreateProfilePopupProps)
         setFormError('')
         setFormSuccess('')
 
-        if (!selectedUserId) {
+        if (!isNewUser && !selectedUserId) {
             setFormError('กรุณาเลือกผู้ใช้')
             return
         }
 
-        if (role === 'teacher') {
-            if (!department.trim()) {
-                setFormError('กรุณากรอกภาควิชา')
-                return
-            }
-        } else {
-            if (!studentId.trim()) {
-                setFormError('กรุณากรอกรหัสนักเรียน')
+        if (isNewUser) {
+            if (!email.trim() || !name.trim() || !sureName.trim()) {
+                setFormError('กรุณากรอกข้อมูลผู้ใช้ให้ครบถ้วน')
                 return
             }
         }
 
+        if (role === 'teacher' && !department.trim()) {
+            setFormError('กรุณากรอกภาควิชา')
+            return
+        } else if (role === 'student' && !studentId.trim()) {
+            setFormError('กรุณากรอกรหัสนักเรียน')
+            return
+        }
+
         setIsSubmitting(true)
         try {
+            let targetUserId = selectedUserId
+
+            // Create User first if New User mode is selected
+            if (isNewUser) {
+                const userRes = await createUser({
+                    email: email.trim(),
+                    name: name.trim(),
+                    sureName: sureName.trim(),
+                    role: role === 'teacher' ? 'TEACHER' : 'STUDENT'
+                })
+                targetUserId = userRes.data.id
+            }
+
+            // Create Profile
             if (role === 'teacher') {
                 await createTeacherProfile({
-                    userId: selectedUserId,
+                    userId: targetUserId,
                     department: department.trim(),
                 })
                 setFormSuccess('สร้างโปรไฟล์ครูสำเร็จ!')
             } else {
                 await createStudentProfile({
-                    userId: selectedUserId,
+                    userId: targetUserId,
                     studentId: studentId.trim(),
                 })
                 setFormSuccess('สร้างโปรไฟล์นักเรียนสำเร็จ!')
@@ -133,7 +153,6 @@ export const CreateProfilePopup = ({ isOpen, onClose }: CreateProfilePopupProps)
     return (
         <div className={styles.modalOverlay} onClick={handleClose} id="create-profile-modal-overlay">
             <div className={styles.modalContent} onClick={(e) => e.stopPropagation()} id="create-profile-modal">
-                {/* Close Button */}
                 <button className={styles.modalClose} onClick={handleClose} id="profile-modal-close-btn" aria-label="ปิด">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18" />
@@ -141,7 +160,6 @@ export const CreateProfilePopup = ({ isOpen, onClose }: CreateProfilePopupProps)
                     </svg>
                 </button>
 
-                {/* Header */}
                 <div className={styles.modalHeader}>
                     <div className={styles.modalIcon} data-role={role}>
                         {role === 'teacher' ? (
@@ -160,20 +178,16 @@ export const CreateProfilePopup = ({ isOpen, onClose }: CreateProfilePopupProps)
                         {role === 'teacher' ? 'สร้างโปรไฟล์ครู' : 'สร้างโปรไฟล์นักเรียน'}
                     </h2>
                     <p className={styles.modalSubtitle}>
-                        {role === 'teacher'
-                            ? 'เลือกผู้ใช้และกรอกข้อมูลภาควิชาเพื่อสร้างโปรไฟล์ครู'
-                            : 'เลือกผู้ใช้และกรอกรหัสนักเรียนเพื่อสร้างโปรไฟล์นักเรียน'}
+                        กรอกข้อมูลเพื่อสร้างโปรไฟล์ใหม่ในระบบ
                     </p>
                 </div>
 
-                {/* Role Tabs */}
                 <div className={styles.roleTabs}>
                     <button
                         type="button"
                         className={role === 'teacher' ? styles.roleTabActive : styles.roleTab}
                         data-role="teacher"
                         onClick={() => handleRoleSwitch('teacher')}
-                        id="role-tab-teacher"
                     >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
@@ -186,7 +200,6 @@ export const CreateProfilePopup = ({ isOpen, onClose }: CreateProfilePopupProps)
                         className={role === 'student' ? styles.roleTabActive : styles.roleTab}
                         data-role="student"
                         onClick={() => handleRoleSwitch('student')}
-                        id="role-tab-student"
                     >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -196,31 +209,84 @@ export const CreateProfilePopup = ({ isOpen, onClose }: CreateProfilePopupProps)
                     </button>
                 </div>
 
-                {/* Form */}
                 <form onSubmit={handleSubmit} className={styles.modalForm}>
-                    {/* User Selection */}
-                    <div className={styles.formGroup}>
-                        <label htmlFor="profileUserId" className={styles.formLabel}>
-                            เลือกผู้ใช้ <span className={styles.required}>*</span>
+                    
+                    {/* User Mode Toggle */}
+                    <div className={styles.formGroup} style={{ flexDirection: 'row', gap: '16px', alignItems: 'center' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#e2e8f0' }}>
+                            <input type="radio" checked={isNewUser} onChange={() => { setIsNewUser(true); setFormError(''); }} />
+                            สร้างผู้ใช้ใหม่
                         </label>
-                        <select
-                            id="profileUserId"
-                            name="userId"
-                            className={styles.formSelect}
-                            value={selectedUserId}
-                            onChange={(e) => { setSelectedUserId(e.target.value); setFormError(''); }}
-                            disabled={isLoadingUsers}
-                        >
-                            <option className='bg-black' value="">
-                                {isLoadingUsers ? 'กำลังโหลด...' : '-- เลือกผู้ใช้ --'}
-                            </option>
-                            {users.map((user: any) => (
-                                <option className='bg-black' key={user.id} value={user.id}>
-                                    {user.name || user.email} ({user.email})
-                                </option>
-                            ))}
-                        </select>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#e2e8f0' }}>
+                            <input type="radio" checked={!isNewUser} onChange={() => { setIsNewUser(false); setFormError(''); }} />
+                            เลือกผู้ใช้ที่มีอยู่แล้ว
+                        </label>
                     </div>
+
+                    {isNewUser ? (
+                        <>
+                            <div className={styles.formGroup}>
+                                <label className={styles.formLabel}>
+                                    อีเมล <span className={styles.required}>*</span>
+                                </label>
+                                <input
+                                    type="email"
+                                    className={styles.formInput}
+                                    placeholder="example@eduflow.com"
+                                    value={email}
+                                    onChange={(e) => { setEmail(e.target.value); setFormError(''); }}
+                                />
+                            </div>
+                            <div style={{ display: 'flex', gap: '16px' }}>
+                                <div className={styles.formGroup} style={{ flex: 1 }}>
+                                    <label className={styles.formLabel}>
+                                        ชื่อ <span className={styles.required}>*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        placeholder="ชื่อจริง"
+                                        value={name}
+                                        onChange={(e) => { setName(e.target.value); setFormError(''); }}
+                                    />
+                                </div>
+                                <div className={styles.formGroup} style={{ flex: 1 }}>
+                                    <label className={styles.formLabel}>
+                                        นามสกุล <span className={styles.required}>*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        placeholder="นามสกุล"
+                                        value={sureName}
+                                        onChange={(e) => { setSureName(e.target.value); setFormError(''); }}
+                                    />
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <div className={styles.formGroup}>
+                            <label htmlFor="profileUserId" className={styles.formLabel}>
+                                เลือกผู้ใช้ <span className={styles.required}>*</span>
+                            </label>
+                            <select
+                                id="profileUserId"
+                                className={styles.formSelect}
+                                value={selectedUserId}
+                                onChange={(e) => { setSelectedUserId(e.target.value); setFormError(''); }}
+                                disabled={isLoadingUsers}
+                            >
+                                <option className='bg-black' value="">
+                                    {isLoadingUsers ? 'กำลังโหลด...' : '-- เลือกผู้ใช้ --'}
+                                </option>
+                                {users.map((user: any) => (
+                                    <option className='bg-black' key={user.id} value={user.id}>
+                                        {user.name || user.email} ({user.email})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
 
                     {/* Teacher: Department */}
                     {role === 'teacher' && (
@@ -231,12 +297,10 @@ export const CreateProfilePopup = ({ isOpen, onClose }: CreateProfilePopupProps)
                             <input
                                 type="text"
                                 id="department"
-                                name="department"
                                 className={styles.formInput}
                                 placeholder="เช่น Electrical Education"
                                 value={department}
                                 onChange={(e) => { setDepartment(e.target.value); setFormError(''); }}
-                                autoFocus
                             />
                         </div>
                     )}
@@ -250,20 +314,17 @@ export const CreateProfilePopup = ({ isOpen, onClose }: CreateProfilePopupProps)
                             <input
                                 type="text"
                                 id="studentIdInput"
-                                name="studentId"
                                 className={styles.formInput}
                                 data-role="student"
                                 placeholder="เช่น 65010001"
                                 value={studentId}
                                 onChange={(e) => { setStudentId(e.target.value); setFormError(''); }}
-                                autoFocus
                             />
                         </div>
                     )}
 
-                    {/* Error / Success Messages */}
                     {formError && (
-                        <div className={styles.formMessage} data-type="error" id="profile-form-error-msg">
+                        <div className={styles.formMessage} data-type="error">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <circle cx="12" cy="12" r="10" />
                                 <line x1="15" y1="9" x2="9" y2="15" />
@@ -273,7 +334,7 @@ export const CreateProfilePopup = ({ isOpen, onClose }: CreateProfilePopupProps)
                         </div>
                     )}
                     {formSuccess && (
-                        <div className={styles.formMessage} data-type="success" id="profile-form-success-msg">
+                        <div className={styles.formMessage} data-type="success">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                                 <polyline points="22 4 12 14.01 9 11.01" />
@@ -282,14 +343,12 @@ export const CreateProfilePopup = ({ isOpen, onClose }: CreateProfilePopupProps)
                         </div>
                     )}
 
-                    {/* Actions */}
                     <div className={styles.modalActions}>
                         <button
                             type="button"
                             className={styles.cancelBtn}
                             onClick={handleClose}
                             disabled={isSubmitting}
-                            id="profile-modal-cancel-btn"
                         >
                             ยกเลิก
                         </button>
@@ -298,7 +357,6 @@ export const CreateProfilePopup = ({ isOpen, onClose }: CreateProfilePopupProps)
                             className={styles.submitBtn}
                             data-role={role}
                             disabled={isSubmitting}
-                            id="profile-modal-submit-btn"
                         >
                             {isSubmitting ? (
                                 <>

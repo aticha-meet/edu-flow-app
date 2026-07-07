@@ -30,3 +30,13 @@ export const getTeachers = async () => {
         throw err;
     }
 }
+
+export const createUser = async (data: any) => {
+    try {
+        const request = await axiosInstance.post(`${PAGE_PATH.API_URL}/create-user`, data)
+        return request.data
+    } catch (err) {
+        console.log(err);
+        throw err;
+    }
+}

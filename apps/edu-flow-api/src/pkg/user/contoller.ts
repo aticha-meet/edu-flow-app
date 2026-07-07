@@ -67,11 +67,14 @@ export async function getTeacher(req: Request, res: Response) {
 
 export async function createUser(req: Request, res: Response) {
     try {
-        const { name, email, role } = req.body;
-        const data = role ? {
-            name, email, role
-        } : {
-            name, email
+        const { name, sureName, email, role } = req.body;
+        const data: any = {
+            name,
+            sureName,
+            email
+        };
+        if (role) {
+            data.role = role;
         }
         const user = await prisma.user.create({
             data: data

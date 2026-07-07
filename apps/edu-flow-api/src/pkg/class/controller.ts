@@ -41,7 +41,7 @@ export async function getListClasses(req: Request, res: Response) {
 
 export async function createClass(req: Request, res: Response) {
     try {
-        const { className, description, teacherId, role } = req.body;
+        const { className, description, teacherId, role, roomId } = req.body;
 
         // ตรวจสอบสิทธิ์: เฉพาะ ADMIN เท่านั้นที่สร้าง Class ได้
         if (role !== 'ADMIN') {
@@ -67,12 +67,15 @@ export async function createClass(req: Request, res: Response) {
             return res.status(400).json({ message: "The specified user is not a teacher" });
         }
 
+        const data = {
+            className,
+            description: description || null,
+            teacherId,
+            roomId: roomId || null
+        }
+
         const newClass = await prisma.class.create({
-            data: {
-                className,
-                description: description || null,
-                teacherId,
-            },
+            data: data,
             include: {
                 teacher: {
                     select: { id: true, name: true, email: true }

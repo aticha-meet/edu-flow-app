@@ -9,6 +9,8 @@ interface formDataType {
     className: string;
     description: string;
     teacherId: string;
+    roomId: string;
+    status: 'upcoming' | 'active' | 'complete';
 }
 
 interface TeacherOption {
@@ -113,6 +115,8 @@ export const CreateClassPopup = (
                 className: formData.className.trim(),
                 description: formData.description.trim() || undefined,
                 teacherId: formData.teacherId,
+                roomId: formData.roomId.trim(),
+                status: formData.status,
                 role: userSession.role,
             });
             setFormSuccess('สร้างรายวิชาสำเร็จ!');
@@ -207,6 +211,38 @@ export const CreateClassPopup = (
                                     {teacher.department ? ` (${teacher.department})` : ''}
                                 </option>
                             ))}
+                        </select>
+                    </div>
+
+                    <div className={styles?.formGroup}>
+                        <label htmlFor="roomId" className={styles?.formLabel}>
+                            ห้องเรียน (Room ID)
+                        </label>
+                        <input
+                            type="text"
+                            id="roomId"
+                            name="roomId"
+                            className={styles?.formInput}
+                            placeholder="เช่น ห้อง 401 (ไม่จำเป็นต้องกรอก)"
+                            value={formData.roomId || ''}
+                            onChange={handleInputChange}
+                        />
+                    </div>
+
+                    <div className={styles?.formGroup}>
+                        <label htmlFor="status" className={styles?.formLabel}>
+                            สถานะคลาส
+                        </label>
+                        <select
+                            id="status"
+                            name="status"
+                            className={styles?.formSelect}
+                            value={formData.status || 'upcoming'}
+                            onChange={handleSelectChange}
+                        >
+                            <option value="upcoming">Upcoming (กำลังจะเริ่ม)</option>
+                            <option value="active">Active (กำลังสอน)</option>
+                            <option value="complete">Complete (จบแล้ว)</option>
                         </select>
                     </div>
 

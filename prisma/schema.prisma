@@ -13,11 +13,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum userStatus {
+  active
+  inactive
+}
+
 model User {
-  id    String  @id @default(uuid())
-  email String  @unique
-  name  String?
-  role  Role    @default(STUDENT)
+  id       String     @id @default(uuid())
+  email    String     @unique
+  name     String?
+  sureName String?
+  role     Role       @default(STUDENT)
+  status   userStatus @default(active)
 
   // Relation ลิงก์ไปยังตารางเฉพาะทาง
   studentProfile StudentProfile?
@@ -48,13 +55,22 @@ enum Role {
   STUDENT
 }
 
+enum statusClass {
+  active
+  upcoming
+  complete
+}
+
 // 2. ตารางคลาสเรียน (Class)
 model Class {
-  id          String   @id @default(uuid())
+  id          Int         @id @default(autoincrement())
   className   String
   description String?
   teacherId   String
-  createdAt   DateTime @default(now())
+  roomId      String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  status      statusClass @default(upcoming)
 
   // Relation: เชื่อมโยงกลับไปหาครูผู้สอน
   teacher     User         @relation("TeacherClasses", fields: [teacherId], references: [id])
@@ -64,9 +80,9 @@ model Class {
 
 // 3. ตารางกลางสำหรับการจับคู่นักเรียนเข้าคลาส (Many-to-Many Enrollment)
 model Enrollment {
-  id         String   @id @default(uuid())
+  id         Int      @id @default(autoincrement())
   studentId  String
-  classId    String
+  classId    Int
   enrolledAt DateTime @default(now())
 
   student User  @relation(fields: [studentId], references: [id], onDelete: Cascade)

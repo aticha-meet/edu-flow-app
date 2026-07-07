@@ -2,7 +2,7 @@
 import { Navbar } from '@/components/navbar';
 import { useEffect, useState } from 'react';
 import styles from './class.module.scss';
-import { getListClasses, createClass } from '@/api/class/controller';
+import { getListClasses } from '@/api/class/controller';
 import useUserStore from '@/store/userStore';
 import { useSession } from 'next-auth/react';
 import { CreateClassPopup } from '@/components/class/CreateClassPopup';
@@ -119,6 +119,8 @@ export default function ClassPage() {
         className: '',
         description: '',
         teacherId: '',
+        roomId: '',
+        status: 'upcoming' as 'upcoming' | 'active' | 'complete'
     });
     const [formError, setFormError] = useState('');
     const [formSuccess, setFormSuccess] = useState('');
@@ -162,7 +164,7 @@ export default function ClassPage() {
 
     // ─── Create Class Handlers ────────────────────────────────────
     const handleOpenModal = () => {
-        setFormData({ className: '', description: '', teacherId: '' });
+        setFormData({ className: '', description: '', teacherId: '', roomId: '', status: 'upcoming' });
         setFormError('');
         setFormSuccess('');
         setIsModalOpen(true);
