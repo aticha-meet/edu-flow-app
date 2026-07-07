@@ -108,6 +108,35 @@
     gap: 12px;
 }
 
+.createProfileBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #c4b5fd;
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.createProfileBtn:hover {
+    color: #e0d4fc;
+    background: rgba(99, 102, 241, 0.15);
+    border-color: rgba(139, 92, 246, 0.5);
+    box-shadow: 0 2px 12px rgba(99, 102, 241, 0.2);
+    transform: translateY(-1px);
+}
+
+.createProfileBtn:active {
+    transform: translateY(0);
+    opacity: 0.9;
+}
+
 .loginBtn {
     display: inline-flex;
     align-items: center;

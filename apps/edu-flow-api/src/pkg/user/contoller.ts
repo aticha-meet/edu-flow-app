@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export async function getUsers(req: Request, res: Response) {
+export async function getListUsers(req: Request, res: Response) {
     try {
         // Fetch users from the database or any other source
         const users = await prisma.user.findMany();
@@ -47,15 +47,19 @@ export async function getStudent(req: Request, res: Response) {
 export async function getTeacher(req: Request, res: Response) {
     try {
         // Fetch students from the database or any other source
-        const students = await prisma.user.findMany({
+        const teacher = await prisma.user.findMany({
             where: {
-                role: "TEACHER"
+                role: {
+                    in: ["TEACHER", "ADMIN"]
+                },
+                teacherProfile: null,
             },
             include: {
                 teacherProfile: true
             }
         });
-        return res.status(200).json({ message: "Students fetched successfully", data: students });
+        console.log(teacher);
+        return res.status(200).json({ message: "Students fetched successfully", data: teacher });
     } catch (error) {
         return res.status(500).json({ message: "Internal server error", error: error });
     }
@@ -63,12 +67,14 @@ export async function getTeacher(req: Request, res: Response) {
 
 export async function createUser(req: Request, res: Response) {
     try {
-        const { name, email } = req.body;
+        const { name, email, role } = req.body;
+        const data = role ? {
+            name, email, role
+        } : {
+            name, email
+        }
         const user = await prisma.user.create({
-            data: {
-                name,
-                email
-            }
+            data: data
         });
         return res.status(201).json({ message: "User created successfully", data: user });
     } catch (error) {
