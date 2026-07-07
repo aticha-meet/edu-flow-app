@@ -1,13 +1,15 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { Navbar } from '@/components/navbar'
 import styles from './exam.module.scss'
 import { jsPDF } from 'jspdf'
 import { ExamResult } from '@/components/exam/ExamResult'
 import { ExamReview } from '@/components/exam/ExamReview'
+import { ExamGuard } from '@/components/exam/ExamGuard'
 import { sarabunRegularBase64 } from '@/config/fonts/Sarabun-Regular'
 import { preExam } from '@/assets/exam/preExam'
+import { useExamStore } from '@/store/examStore'
 
 // ─── Types ───────────────────────────────────────────────────────
 export interface AnswerOption {
@@ -24,43 +26,72 @@ export interface ExamQuestion {
 
 // ─── Component ───────────────────────────────────────────────────
 export default function ExamPage() {
-    const [examData] = useState<ExamQuestion[]>(preExam)
-    const [currentQuestion, setCurrentQuestion] = useState(0)
-    const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
-    const [isSubmitted, setIsSubmitted] = useState(false)
+    const examData = preExam
     const [showReview, setShowReview] = useState(false)
+    const [mounted, setMounted] = useState(false)
+
+    const {
+        currentQuestion,
+        setCurrentQuestion,
+        selectedAnswers,
+        selectAnswer,
+        isSubmitted,
+        submitExam,
+        timeLeft,
+        decrementTime,
+        resetExam
+    } = useExamStore()
+
+    // Hydration check for Zustand persist
+    useEffect(() => {
+        setMounted(true)
+    }, [])
+
+    // ─── Timer Logic ─────────────────────────────────────────────
+    useEffect(() => {
+        if (isSubmitted || timeLeft <= 0) return
+
+        const timerId = setInterval(() => {
+            decrementTime()
+        }, 1000)
+
+        return () => clearInterval(timerId)
+    }, [isSubmitted, timeLeft, decrementTime])
+
+    const formatTime = (seconds: number) => {
+        const h = Math.floor(seconds / 3600)
+        const m = Math.floor((seconds % 3600) / 60)
+        const s = seconds % 60
+        if (h > 0) {
+            return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+        }
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+    }
 
     const totalQuestions = examData.length
     const answeredCount = Object.keys(selectedAnswers).length
     const progress = (answeredCount / totalQuestions) * 100
 
     // ─── Handlers ────────────────────────────────────────────────
-    const handleSelectAnswer = useCallback((questionID: number, answerId: number) => {
-        if (isSubmitted) return
-        setSelectedAnswers(prev => ({ ...prev, [questionID]: answerId }))
-    }, [isSubmitted])
+    const handleSelectAnswer = (questionID: number, answerId: number) => {
+        selectAnswer(questionID, answerId)
+    }
 
     const handlePrev = () => {
-        setCurrentQuestion(prev => Math.max(0, prev - 1))
+        setCurrentQuestion(Math.max(0, currentQuestion - 1))
     }
 
     const handleNext = () => {
-        setCurrentQuestion(prev => Math.min(totalQuestions - 1, prev + 1))
+        setCurrentQuestion(Math.min(totalQuestions - 1, currentQuestion + 1))
     }
 
     const handleGoToQuestion = (index: number) => {
         setCurrentQuestion(index)
     }
 
-    const handleSubmit = () => {
-        setIsSubmitted(true)
-    }
-
     const handleRetry = () => {
-        setSelectedAnswers({})
-        setIsSubmitted(false)
+        resetExam()
         setShowReview(false)
-        setCurrentQuestion(0)
     }
 
     // ─── Score Calculation ───────────────────────────────────────
@@ -143,7 +174,7 @@ export default function ExamPage() {
 
         doc.setFontSize(16)
         doc.setTextColor(0, 0, 0)
-        doc.text(`คะแนนที่ได้: ${correctCount} / ${totalQuestions}`, margin + 10, y + 6)
+        doc.text(`คะแนนรวมทั้งหมด: ${correctCount} จาก ${totalQuestions} คะแนน`, margin + 10, y + 6)
 
         doc.setFontSize(16)
         doc.text(`${percentage}%`, pageWidth - margin - 10, y + 6, { align: 'right' })
@@ -226,6 +257,8 @@ export default function ExamPage() {
         doc.save(`EduFlow_Exam_Result_${new Date().toISOString().slice(0, 10)}.pdf`)
     }
 
+    if (!mounted) return null // Prevent hydration mismatch
+
     // ─── Render: Result Page ─────────────────────────────────────
     if (isSubmitted && !showReview) {
         return (
@@ -277,6 +310,11 @@ export default function ExamPage() {
         <div className={styles.page}>
             <Navbar />
             <main className={styles.main}>
+                {/* Anti-Cheating Guard */}
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <ExamGuard />
+                </div>
+
                 {/* Header */}
                 <div className={styles.examHeader}>
                     <div className={styles.examBadge}>
@@ -291,6 +329,17 @@ export default function ExamPage() {
                     </div>
                     <h1 className={styles.examTitle}>แบบทดสอบความรู้พื้นฐาน</h1>
                     <p className={styles.examSubtitle}>เลือกคำตอบที่ถูกต้องที่สุดในแต่ละข้อ</p>
+                </div>
+
+                {/* Timer */}
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <div className={`${styles.timerContainer} ${timeLeft < 300 ? styles.timerWarning : ''}`}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                        </svg>
+                        <span className={styles.timerText}>{formatTime(timeLeft)}</span>
+                    </div>
                 </div>
 
                 {/* Progress */}
@@ -371,7 +420,7 @@ export default function ExamPage() {
                     {currentQuestion === totalQuestions - 1 ? (
                         <button
                             className={styles.submitBtn}
-                            onClick={handleSubmit}
+                            onClick={submitExam}
                             disabled={answeredCount < totalQuestions}
                             id="submit-exam-btn"
                         >

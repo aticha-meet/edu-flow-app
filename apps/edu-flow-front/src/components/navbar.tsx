@@ -2,9 +2,20 @@
 
 import { useState } from 'react'
 import style from './navbar.module.scss'
+import Link from 'next/link'
 import { CreateProfilePopup } from '@/components/profile/CreateProfilePopup'
+import { usePathname } from 'next/navigation'
+
+const navItems = [
+    { href: '/class', label: 'Class' },
+    { href: '/courses', label: 'Courses' },
+    { href: '/exam', label: 'Exam' },
+    { href: '/schedule', label: 'Schedule' },
+    { href: '/reports', label: 'Reports' },
+]
 
 export const Navbar = () => {
+    const pathname = usePathname();
     const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false)
 
     return (
@@ -25,11 +36,16 @@ export const Navbar = () => {
 
                     {/* Navigation Links */}
                     <ul className={style.navLinks}>
-                        <li><a href="#" className={style.navLinkActive}>Home</a></li>
-                        <li><a href="#" className={style.navLink}>Courses</a></li>
-                        <li><a href="/exam" className={style.navLink}>Exam</a></li>
-                        <li><a href="#" className={style.navLink}>Schedule</a></li>
-                        <li><a href="#" className={style.navLink}>Reports</a></li>
+                        {navItems.map((item) => (
+                            <li key={item.href}>
+                                <Link
+                                    href={item.href}
+                                    className={pathname === item.href ? style.navLinkActive : style.navLink}
+                                >
+                                    {item.label}
+                                </Link>
+                            </li>
+                        ))}
                     </ul>
 
                     {/* Auth Button */}
