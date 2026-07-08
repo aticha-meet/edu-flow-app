@@ -56,3 +56,6 @@ test-output
 .env.*
 .env.local.*
 /generated/prisma
+
+# Local Netlify folder
+.netlify

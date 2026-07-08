@@ -2,7 +2,11 @@
   "name": "@edu-flow/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "netlify:init": "pnpm exec netlify init",
+    "netlify:deploy": "pnpm nx run edu-flow-front:deploy",
+    "netlify:deploy:prod": "pnpm nx run edu-flow-front:deploy:production"
+  },
   "private": true,
   "dependencies": {
     "@prisma/client": "6.19.3",
@@ -26,6 +30,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",
+    "@netlify/functions": "^1.4.0",
     "@next/eslint-plugin-next": "^16.1.6",
     "@nx/devkit": "23.0.1",
     "@nx/eslint": "23.0.1",
@@ -67,6 +72,7 @@
     "jest-environment-jsdom": "~30.3.0",
     "jest-environment-node": "~30.3.0",
     "jest-util": "~30.3.0",
+    "netlify-cli": "26.2.0",
     "nx": "23.0.1",
     "prettier": "~3.6.2",
     "react-refresh": "^0.10.0",

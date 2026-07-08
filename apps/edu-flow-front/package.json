@@ -6,5 +6,25 @@
     "next": "~16.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
+  },
+  "nx": {
+    "targets": {
+      "serve-functions": {
+        "command": "pnpm exec netlify dev"
+      },
+      "deploy": {
+        "dependsOn": ["build"],
+        "command": "pnpm exec netlify deploy",
+        "options": {
+          "cwd": "apps/edu-flow-front"
+        },
+        "configurations": {
+          "production": {
+            "command": "pnpm exec netlify deploy --prod",
+            "cwd": "apps/edu-flow-front"
+          }
+        }
+      }
+    }
   }
 }
