@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Public paths ที่ไม่ต้องการ authentication
-const PUBLIC_PATHS = ['/login', '/callback', '/api/auth'];
+const PUBLIC_PATHS = ['/login', '/callback', '/api/auth','/exam'];
 
 export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
