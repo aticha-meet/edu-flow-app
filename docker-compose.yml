@@ -5,17 +5,26 @@ services:
     build:
       context: .
       dockerfile: apps/edu-flow-front/Dockerfile
+      args:
+        NEXT_PUBLIC_AUTH_URL: ${NEXT_PUBLIC_AUTH_URL}
+        NEXT_PUBLIC_ENDPOINT_URL: ${NEXT_PUBLIC_ENDPOINT_URL}
     container_name: edu-flow-web
     restart: unless-stopped
     ports:
       - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_AUTH_URL=${NEXT_PUBLIC_AUTH_URL}
+      - NEXT_PUBLIC_ENDPOINT_URL=${NEXT_PUBLIC_ENDPOINT_URL}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+    env_file:
+      - apps/edu-flow-front/.env
 
   api:
     build:
       context: .
       dockerfile: apps/edu-flow-api/Dockerfile
       args:
-        DATABASE_URL: ${DOCKER_DATABASE_URL}
+        DOCKER_DATABASE_URL: ${DOCKER_DATABASE_URL}
     container_name: edu-flow-api
     restart: unless-stopped
     ports:
@@ -23,6 +32,7 @@ services:
       - "5555:5555"
     environment:
       - DATABASE_URL=${DOCKER_DATABASE_URL}
+      - FRONTEND_URL=${FRONTEND_URL}
     depends_on:
       db:
         condition: service_healthy
@@ -46,6 +56,15 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: edu-flow-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CF_TUNNEL_TOKEN}
+    depends_on:
+      - web
+      - api
 
 volumes:
   db_data:

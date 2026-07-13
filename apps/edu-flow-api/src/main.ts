@@ -5,7 +5,6 @@ import AppRouter from './router';
 import { PATH_ENV } from './configs/pathEnv';
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
-// eslint-disable-next-line @nx/enforce-module-boundaries
 const cookieParser = require('cookie-parser');
 
 dotenv.config();

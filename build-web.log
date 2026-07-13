@@ -1,0 +1,277 @@
+time="2026-07-13T12:58:51+07:00" level=warning msg="D:\\project\\edu-flow-app\\docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+ Image edu-flow-app-web Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 697B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 1.07kB done
+#2 DONE 0.0s
+
+#3 [auth] library/node:pull token for registry-1.docker.io
+#3 DONE 0.0s
+
+#4 [internal] load metadata for docker.io/library/node:22-alpine
+#4 DONE 1.4s
+
+#5 [internal] load metadata for docker.io/library/node:20-alpine
+#5 DONE 1.4s
+
+#6 [internal] load .dockerignore
+#6 transferring context: 122B done
+#6 DONE 0.0s
+
+#7 [runner 1/5] FROM docker.io/library/node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
+#7 DONE 0.0s
+
+#8 [base 1/7] FROM docker.io/library/node:22-alpine@sha256:16e22a550f3863206a3f701448c45f7912c6896a62de43add43bb9c86130c3e2
+#8 DONE 0.0s
+
+#9 [base 2/7] WORKDIR /repo
+#9 CACHED
+
+#10 [runner 2/5] WORKDIR /app
+#10 CACHED
+
+#11 [internal] load build context
+#11 transferring context: 258.84kB 0.1s done
+#11 DONE 0.1s
+
+#12 [base 3/7] RUN npm install -g pnpm@9
+#12 2.354 
+#12 2.354 added 1 package in 2s
+#12 2.354 
+#12 2.354 1 package is looking for funding
+#12 2.355   run `npm fund` for details
+#12 2.356 npm notice
+#12 2.356 npm notice New major version of npm available! 10.9.8 -> 12.0.1
+#12 2.356 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.0.1
+#12 2.356 npm notice To update run: npm install -g npm@12.0.1
+#12 2.356 npm notice
+#12 DONE 2.5s
+
+#13 [base 4/7] COPY pnpm-lock.yaml pnpm-workspace.yaml package.json nx.json tsconfig.base.json ./
+#13 DONE 0.1s
+
+#14 [base 5/7] RUN pnpm install --frozen-lockfile
+#14 0.963 Lockfile is up to date, resolution step is skipped
+#14 1.100 Progress: resolved 1, reused 0, downloaded 0, added 0
+#14 1.556 Packages: +2069
+#14 1.556 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#14 2.122 Progress: resolved 2069, reused 0, downloaded 10, added 0
+#14 3.122 Progress: resolved 2069, reused 0, downloaded 42, added 0
+#14 3.489 
+#14 3.489    ╭───────────────────────────────────────────────────────────────────╮
+#14 3.489    │                                                                   │
+#14 3.489    │                Update available! 9.15.9 → 11.12.0.                │
+#14 3.489    │   Changelog: https://github.com/pnpm/pnpm/releases/tag/v11.12.0   │
+#14 3.489    │                 Run "pnpm add -g pnpm" to update.                 │
+#14 3.489    │                                                                   │
+#14 3.489    ╰───────────────────────────────────────────────────────────────────╯
+#14 3.489 
+#14 4.123 Progress: resolved 2069, reused 0, downloaded 71, added 71
+#14 5.123 Progress: resolved 2069, reused 0, downloaded 148, added 147
+#14 6.123 Progress: resolved 2069, reused 0, downloaded 211, added 209
+#14 7.122 Progress: resolved 2069, reused 0, downloaded 240, added 239
+#14 8.121 Progress: resolved 2069, reused 0, downloaded 273, added 273
+#14 9.122 Progress: resolved 2069, reused 0, downloaded 295, added 295
+#14 10.12 Progress: resolved 2069, reused 0, downloaded 336, added 336
+#14 11.12 Progress: resolved 2069, reused 0, downloaded 364, added 364
+#14 12.12 Progress: resolved 2069, reused 0, downloaded 372, added 372
+#14 13.12 Progress: resolved 2069, reused 0, downloaded 390, added 390
+#14 14.12 Progress: resolved 2069, reused 0, downloaded 432, added 432
+#14 15.12 Progress: resolved 2069, reused 0, downloaded 467, added 467
+#14 16.12 Progress: resolved 2069, reused 0, downloaded 506, added 506
+#14 17.13 Progress: resolved 2069, reused 0, downloaded 571, added 571
+#14 18.13 Progress: resolved 2069, reused 0, downloaded 646, added 646
+#14 19.13 Progress: resolved 2069, reused 0, downloaded 716, added 715
+#14 20.13 Progress: resolved 2069, reused 0, downloaded 774, added 774
+#14 21.13 Progress: resolved 2069, reused 0, downloaded 840, added 841
+#14 22.13 Progress: resolved 2069, reused 0, downloaded 900, added 899
+#14 23.13 Progress: resolved 2069, reused 0, downloaded 961, added 962
+#14 24.13 Progress: resolved 2069, reused 0, downloaded 1004, added 1005
+#14 25.13 Progress: resolved 2069, reused 0, downloaded 1062, added 1062
+#14 26.13 Progress: resolved 2069, reused 0, downloaded 1120, added 1119
+#14 27.13 Progress: resolved 2069, reused 0, downloaded 1191, added 1192
+#14 28.13 Progress: resolved 2069, reused 0, downloaded 1285, added 1286
+#14 29.13 Progress: resolved 2069, reused 0, downloaded 1361, added 1361
+#14 30.13 Progress: resolved 2069, reused 0, downloaded 1466, added 1465
+#14 31.13 Progress: resolved 2069, reused 0, downloaded 1539, added 1540
+#14 32.13 Progress: resolved 2069, reused 0, downloaded 1614, added 1615
+#14 33.13 Progress: resolved 2069, reused 0, downloaded 1719, added 1720
+#14 34.13 Progress: resolved 2069, reused 0, downloaded 1819, added 1820
+#14 35.13 Progress: resolved 2069, reused 0, downloaded 1995, added 1995
+#14 35.94 Progress: resolved 2069, reused 0, downloaded 2068, added 2069, done
+#14 36.95 .../node_modules/@prisma/engines postinstall$ node scripts/postinstall.js
+#14 38.58 .../node_modules/@prisma/engines postinstall: Done
+#14 38.74 .../node_modules/prisma preinstall$ node scripts/preinstall-entry.js
+#14 38.82 .../node_modules/prisma preinstall: Done
+#14 39.21 .../node_modules/@prisma/client postinstall$ node scripts/postinstall.js
+#14 42.13 .../node_modules/@prisma/client postinstall: prisma:warn We could not find your Prisma schema in the default locations (see: https://pris.ly/d/prisma-schema-location).
+#14 42.13 .../node_modules/@prisma/client postinstall: If you have a Prisma schema file in a custom path, you will need to run
+#14 42.13 .../node_modules/@prisma/client postinstall: `prisma generate --schema=./path/to/your/schema.prisma` to generate Prisma Client.
+#14 42.13 .../node_modules/@prisma/client postinstall: If you do not have a Prisma schema file yet, you can ignore this message.
+#14 42.17 .../node_modules/@prisma/client postinstall: Done
+#14 42.52 .../node_modules/nx postinstall$ node -e "try{require('./dist/bin/post-install')}catch(e){}"
+#14 42.92 .../node_modules/nx postinstall: Done
+#14 43.46 
+#14 43.46 dependencies:
+#14 43.46 + @prisma/client 6.19.3
+#14 43.46 + @tailwindcss/postcss 4.3.2
+#14 43.46 + axios 1.16.0
+#14 43.46 + cookie-parser 1.4.7
+#14 43.46 + express 4.22.2
+#14 43.46 + jsonwebtoken 9.0.3
+#14 43.46 + jspdf 4.2.1
+#14 43.46 + morgan 1.11.0
+#14 43.46 + next 16.1.7
+#14 43.46 + next-auth 4.24.14
+#14 43.46 + postcss 8.5.16
+#14 43.46 + prisma 6.19.3
+#14 43.46 + react 19.2.7
+#14 43.46 + react-dom 19.2.7
+#14 43.46 + studio 0.13.5
+#14 43.46 + tailwindcss 4.3.2
+#14 43.46 + validate 5.2.0
+#14 43.46 + zustand 5.0.14
+#14 43.46 
+#14 43.46 devDependencies:
+#14 43.46 + @eslint/js 9.39.4
+#14 43.46 + @netlify/functions 1.6.0
+#14 43.46 + @next/eslint-plugin-next 16.2.9
+#14 43.46 + @nx/devkit 23.0.1
+#14 43.46 + @nx/eslint 23.0.1
+#14 43.46 + @nx/eslint-plugin 23.0.1
+#14 43.46 + @nx/express 23.0.1
+#14 43.46 + @nx/jest 23.0.1
+#14 43.46 + @nx/js 23.0.1
+#14 43.46 + @nx/next 23.0.1
+#14 43.46 + @nx/node 23.0.1
+#14 43.46 + @nx/playwright 23.0.1
+#14 43.46 + @nx/web 23.0.1
+#14 43.46 + @nx/webpack 23.0.1
+#14 43.46 + @nx/workspace 23.0.1
+#14 43.46 + @playwright/test 1.61.1
+#14 43.46 + @pmmmwh/react-refresh-webpack-plugin 0.5.17
+#14 43.46 + @svgr/webpack 8.1.0
+#14 43.46 + @swc-node/register 1.11.1
+#14 43.46 + @swc/cli 0.8.1
+#14 43.46 + @swc/core 1.15.43
+#14 43.46 + @swc/helpers 0.5.23
+#14 43.46 + @testing-library/dom 10.4.0
+#14 43.46 + @testing-library/react 16.3.0
+#14 43.46 + @types/cookie 1.0.0
+#14 43.46 + @types/express 4.17.25
+#14 43.46 + @types/jest 30.0.0
+#14 43.46 + @types/node 22.20.0
+#14 43.46 + @types/react 19.2.17
+#14 43.46 + @types/react-dom 19.2.3
+#14 43.46 + babel-jest 30.3.0
+#14 43.46 + eslint 9.39.4
+#14 43.46 + eslint-config-next 16.2.9
+#14 43.46 + eslint-config-prettier 10.1.8
+#14 43.46 + eslint-plugin-import 2.31.0
+#14 43.46 + eslint-plugin-jsx-a11y 6.10.1
+#14 43.46 + eslint-plugin-playwright 1.8.3
+#14 43.46 + eslint-plugin-react 7.35.0
+#14 43.46 + eslint-plugin-react-hooks 5.0.0
+#14 43.46 + jest 30.3.0
+#14 43.46 + jest-environment-jsdom 30.3.0
+#14 43.46 + jest-environment-node 30.3.0
+#14 43.46 + jest-util 30.3.0
+#14 43.46 + netlify-cli 26.2.0
+#14 43.46 + nx 23.0.1
+#14 43.46 + prettier 3.6.2
+#14 43.46 + react-refresh 0.10.0
+#14 43.46 + ts-jest 29.4.11
+#14 43.46 + ts-node 10.9.1
+#14 43.46 + tslib 2.8.1
+#14 43.46 + typescript 5.9.3
+#14 43.46 + typescript-eslint 8.62.1
+#14 43.46 + webpack 5.105.2
+#14 43.46 + webpack-cli 7.1.0
+#14 43.46 + webpack-dev-server 5.2.6
+#14 43.46 
+#14 43.46 The following dependencies have build scripts that were ignored: @parcel/watcher, @swc/core, core-js, core-js-pure, esbuild, less, netlify-cli, sharp, unix-dgram, unrs-resolver
+#14 43.46 To allow the execution of build scripts for these packages, add their names to "pnpm.onlyBuiltDependencies" in your "package.json", then run "pnpm rebuild"
+#14 43.46 
+#14 43.66 Done in 43.3s using pnpm v9.15.9
+#14 DONE 46.0s
+
+#15 [base 6/7] COPY . .
+#15 DONE 1.3s
+
+#16 [base 7/7] RUN pnpm exec nx build edu-flow-front --configuration=production --skip-nx-cache
+#16 9.720 
+#16 9.720 > nx run @edu-flow/edu-flow-front:build
+#16 9.720 
+#16 9.722 > next build
+#16 9.722 
+#16 10.59 [35m[1mAttention[22m[39m: Next.js now collects completely anonymous telemetry regarding usage.
+#16 10.59 This information is used to shape Next.js' roadmap and prioritize features.
+#16 10.59 You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+#16 10.59 [36mhttps://nextjs.org/telemetry[39m
+#16 10.59 
+#16 10.60 [1m[38;2;173;127;168m▲ Next.js 16.1.7[39m[22m (Turbopack)
+#16 10.60 - Environments: .env
+#16 10.60 
+#16 10.65 [37m[1m [22m[39m Creating an optimized production build ...
+#16 17.83 Turbopack build encountered 1 warnings:
+#16 17.83 ./apps/edu-flow-front
+#16 17.83 Failed to find font override values for font `Google Sans Flex`
+#16 17.83 Skipping generating a fallback font.
+#16 17.83 
+#16 17.83 
+#16 17.86 [32m[1m✓[22m[39m Compiled successfully in 6.8s
+#16 17.86 [37m[1m [22m[39m Running TypeScript ...
+#16 18.30 [33m[1m⚠[22m[39m TypeScript project references are not fully supported. Attempting to build in incremental mode.
+#16 21.77 [37m[1m [22m[39m Collecting page data using 15 workers ...
+#16 22.89 [37m[1m [22m[39m Generating static pages using 15 workers (0/7) ...
+#16 23.27 [37m[1m [22m[39m Generating static pages using 15 workers (1/7) 
+#16 23.55 [37m[1m [22m[39m Generating static pages using 15 workers (3/7) 
+#16 23.55 [37m[1m [22m[39m Generating static pages using 15 workers (5/7) 
+#16 23.55 [32m[1m✓[22m[39m Generating static pages using 15 workers (7/7) in 661.0ms
+#16 23.56 [37m[1m [22m[39m Finalizing page optimization ...
+#16 23.91 
+#16 23.91 [4mRoute (app)[24m
+#16 23.91 ┌ ○ /
+#16 23.91 ├ ○ /_not-found
+#16 23.91 ├ ƒ /api/auth/[...nextauth]
+#16 23.91 ├ ƒ /api/hello
+#16 23.91 ├ ○ /class
+#16 23.91 ├ ○ /exam
+#16 23.91 └ ○ /login
+#16 23.91 
+#16 23.91 
+#16 23.91 ƒ Proxy (Middleware)
+#16 23.91 
+#16 23.91 ○  (Static)   prerendered as static content
+#16 23.91 ƒ  (Dynamic)  server-rendered on demand
+#16 23.91 
+#16 24.08 
+#16 24.08 
+#16 24.08 
+#16 24.08  NX   Successfully ran target build for project @edu-flow/edu-flow-front
+#16 24.08 
+#16 24.08 
+#16 DONE 24.3s
+
+#17 [runner 3/5] COPY --from=base /repo/apps/edu-flow-front/.next/standalone ./
+#17 DONE 0.6s
+
+#18 [runner 4/5] COPY --from=base /repo/apps/edu-flow-front/public ./apps/edu-flow-front/public
+#18 DONE 0.1s
+
+#19 [runner 5/5] COPY --from=base /repo/apps/edu-flow-front/.next/static ./apps/edu-flow-front/.next/static
+#19 DONE 0.1s
+
+#20 exporting to image
+#20 exporting layers
+#20 exporting layers 0.4s done
+#20 writing image sha256:1008e8a2950e458af28c4145db3a0b2633b8c6174acf73486042b8b45bca29ef done
+#20 naming to docker.io/library/edu-flow-app-web done
+#20 DONE 0.4s
+
+#21 resolving provenance for metadata file
+#21 DONE 0.0s
+ Image edu-flow-app-web Built 

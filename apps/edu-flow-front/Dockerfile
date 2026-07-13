@@ -8,6 +8,12 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 
+ARG NEXT_PUBLIC_AUTH_URL
+ENV NEXT_PUBLIC_AUTH_URL=${NEXT_PUBLIC_AUTH_URL}
+
+ARG NEXT_PUBLIC_ENDPOINT_URL
+ENV NEXT_PUBLIC_ENDPOINT_URL=${NEXT_PUBLIC_ENDPOINT_URL}
+
 # ปิด nx daemon และ cache เพราะมีปัญหา SQLite I/O ใน container
 ENV NX_DAEMON=false
 ENV NX_SKIP_NX_CACHE=true

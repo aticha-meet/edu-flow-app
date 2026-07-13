@@ -19,7 +19,7 @@ ARG DOCKER_DATABASE_URL
 ENV DATABASE_URL=${DOCKER_DATABASE_URL}
 
 # generate prisma client ก่อน build เสมอ
-RUN pnpm exec prisma generate
+RUN pnpm prisma generate
 
 COPY . .
 

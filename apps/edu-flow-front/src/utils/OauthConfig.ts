@@ -5,6 +5,7 @@ import { PAGE_PATH } from "@/config/pagePath";
 import { CALL_ENV } from "@/config/callEnv";
 
 export const authOptions = {
+    trustHost: true, 
     providers: [
         GoogleProvider({
             clientId: CALL_ENV.GOOGLE_CLIENT_ID as string,
@@ -56,7 +57,7 @@ export const authOptions = {
         },
         async redirect({ url, baseUrl }: any) {
             // ระบุ base URL เริ่มต้น ป้องกันค่า undefined
-            const nextAuthUrl = process.env.NEXT_PUBLIC_AUTH_URL || PAGE_PATH.NEXTAUTH_URL as string;
+            const nextAuthUrl = PAGE_PATH.NEXTAUTH_URL as string;
             const resolvedUrl = new URL(url, nextAuthUrl);
 
             // อนุญาตให้ redirect ภายใต้โดเมนเดียวกัน
