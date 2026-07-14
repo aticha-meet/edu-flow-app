@@ -118,27 +118,137 @@ And join the Nx community:
 - [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 
 
-## Deploy on docker server
+## Project Structure
 
-Create config dockerfile(.dockerfile) in select project path and create docker-compose.yml at root 
-when config complete. Run command :  
-
-```sh
-docker compose build web --no-cache --progress=plain
 ```
-***This Command for build project with dockerfile***
-
-Run Docker containner with cmd.
-```sh
-docker compose up -d db (db = {name of service})
+edu-flow-app/
+│
+├── apps/
+│   │
+│   ├── edu-flow-front/          # Next.js — เว็บหน้าบ้าน (frontend)
+│   │   ├── src/
+│   │   ├── public/
+│   │   ├── next.config.js
+│   │   └── Dockerfile
+│   │
+│   ├── edu-flow-api/             # Express — REST API หลัก (backend)
+│   │   ├── src/
+│   │   │   ├── configs/
+│   │   │   ├── hooks/
+│   │   │   ├── middleware/
+│   │   │   ├── pkg/
+│   │   │   ├── utils/
+│   │   │   ├── main.ts
+│   │   │   └── router.ts
+│   │   └── Dockerfile
+│   │
+│   ├── edu-flow-backend/         # Shared backend logic / services
+│   │
+│   ├── edu-flow-front-e2e/       # E2E tests (frontend)
+│   └── edu-flow-api-e2e/         # E2E tests (api)
+│
+├── lib/                          # Shared libraries ใช้ร่วมกันระหว่าง apps
+│
+├── prisma/
+│   ├── migrations/
+│   └── schema.prisma
+│
+├── docker-compose.yml            # Orchestrate ทุก service (web, api, db, tunnel)
+├── prisma.config.ts
+├── nx.json
+├── pnpm-workspace.yaml
+└── .env                          # Environment variables (ไม่ commit เข้า git)
 ```
 
-And when update docker compose run
-```sh
-docker compose up -d --force-recreate db
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Monorepo | Nx |
+| Package manager | pnpm |
+| Frontend | Next.js 16, React 19, Tailwind CSS 4 |
+| Backend | Express, Node.js |
+| ORM | Prisma 6 |
+| Database | PostgreSQL 16 |
+| Auth | NextAuth (Google / GitHub OAuth) |
+| Containerization | Docker, Docker Compose |
+| Tunnel / HTTPS | Cloudflare Tunnel |
+
+## Getting Started (Local Development)
+
+```bash
+pnpm install
+pnpm exec prisma generate
+pnpm exec nx serve edu-flow-front
+pnpm exec nx serve edu-flow-api
 ```
 
-SSH to docker conatinner
-```sh
-docker exec -it edu-flow-api sh
+## Deployment (Docker)
+
+โปรเจกต์นี้ deploy ผ่าน Docker Compose รันทั้งหมด 4 service พร้อมกัน:
+
+| Service | หน้าที่ | Port (internal) |
+|---|---|---|
+| `web` | Next.js frontend | 3000 |
+| `api` | Express backend | 3333 |
+| `db` | PostgreSQL 16 | 5432 |
+| `cloudflared` | Cloudflare Tunnel (HTTPS + public domain) | - |
+
+### Build และรันทั้งหมด
+
+```bash
+docker compose up -d --build
 ```
+
+### รัน Database Migration (ครั้งแรก / หลัง schema เปลี่ยน)
+
+```bash
+docker compose exec api pnpm exec prisma migrate deploy
+```
+
+### หยุดการทำงานชั่วคราว (ไม่ลบข้อมูล)
+
+```bash
+docker compose stop
+```
+
+### รันกลับมาใหม่
+
+```bash
+docker compose start
+```
+
+### ดู log
+
+```bash
+docker compose logs -f web
+docker compose logs -f api
+```
+
+## Environment Variables
+
+สร้างไฟล์ `.env` ที่ root ของโปรเจกต์ (ดู `.env.example` ประกอบ):
+
+```env
+# Database
+DOCKER_DATABASE_URL=postgresql://<user>:<password>@db:5432/<db_name>
+DB_USER=
+DB_PASSWORD=
+DB_NAME=
+
+# Auth
+NEXTAUTH_URL=https://app.edflow.online
+NEXTAUTH_SECRET=
+NEXT_PUBLIC_AUTH_URL=https://app.edflow.online
+NEXT_PUBLIC_ENDPOINT_URL=https://api.edflow.online
+
+# Cloudflare
+CF_TUNNEL_TOKEN=
+```
+
+## Live Environments
+
+| Environment | URL |
+|---|---|
+| Web (Production) | https://app.edflow.online |
+| API (Production) | https://api.edflow.online |
