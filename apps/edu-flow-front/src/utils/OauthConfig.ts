@@ -4,6 +4,11 @@ import GithubProvider from "next-auth/providers/github";
 import { PAGE_PATH } from "@/config/pagePath";
 import { CALL_ENV } from "@/config/callEnv";
 
+// Set NEXTAUTH_URL dynamically ตาม mode (NextAuth อ่านค่านี้จาก process.env โดยตรง)
+if (!process.env.NEXTAUTH_URL) {
+    process.env.NEXTAUTH_URL = PAGE_PATH.NEXTAUTH_URL;
+}
+
 export const authOptions = {
     trustHost: true, 
     providers: [
