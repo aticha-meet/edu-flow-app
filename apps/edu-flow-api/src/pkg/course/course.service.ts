@@ -5,16 +5,47 @@ export class ClassService {
    * ดึง classes ทั้งหมด (สำหรับ ADMIN)
    */
   async findAllAdmin() {
-    return prisma.class.findMany({});
+    return prisma.course.findMany({
+      include: {
+        teacher: { select: { name: true, sureName: true } },
+        _count: { select: { enrollments: true } },
+      },
+    });
+  }
+
+  /**
+   * ดึง class ตาม id (สำหรับหน้า Course Detail)
+   */
+  async findById(id: string) {
+    return prisma.course.findUnique({
+      where: {
+        id: id,
+      },
+      include: {
+        teacher: {
+          select: { id: true, name: true, sureName: true, email: true },
+        },
+        enrollments: {
+          include: {
+            student: {
+              select: { id: true, name: true, sureName: true, email: true },
+            },
+          },
+        },
+        _count: { select: { enrollments: true } },
+      },
+    });
   }
 
   /**
    * ดึง classes ตาม teacherId (สำหรับ TEACHER)
    */
   async findByTeacher(teacherId: string) {
-    return prisma.class.findMany({
-      where: {
-        id: parseInt(teacherId),
+    return prisma.course.findMany({
+      where: { teacherId },
+      include: {
+        teacher: { select: { name: true, sureName: true } },
+        _count: { select: { enrollments: true } },
       },
     });
   }
@@ -25,7 +56,7 @@ export class ClassService {
   async findByStudent(studentId: string) {
     return prisma.enrollment.findMany({
       where: { studentId },
-      include: { class: true },
+      include: { course: true },
     });
   }
 
@@ -47,14 +78,11 @@ export class ClassService {
     description?: string;
     teacherId: string;
     roomId?: string;
+    code: string;
+    maxStudents?: number;
   }) {
-    return prisma.class.create({
-      data: {
-        className: data.className,
-        description: data.description || null,
-        teacherId: data.teacherId,
-        roomId: data.roomId || null,
-      },
+    return prisma.course.create({
+      data: data,
       include: {
         teacher: {
           select: { id: true, name: true, email: true },

@@ -2,12 +2,12 @@
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output : "standalone",
+  output: "standalone",
   async redirects() {
     return [
       {
         source: '/',
-        destination: '/class',
+        destination: '/course',
         permanent: false,
       },
     ];

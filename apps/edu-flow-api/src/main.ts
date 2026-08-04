@@ -13,10 +13,12 @@ const app = express();
 const PORT = PATH_ENV.PORT;
 
 // CORS ต้องระบุ origin ตรงๆ และเปิด credentials เพื่อให้ browser ส่ง cookie ได้
-app.use(cors({
-  origin: PATH_ENV.FRONT_URL || 'http://localhost:3000',
-  credentials: true, // สำคัญ: ต้องเปิดเพื่อรับ cookie จาก browser
-}));
+app.use(
+  cors({
+    origin: PATH_ENV.FRONT_URL || 'http://localhost:3000',
+    credentials: true, // สำคัญ: ต้องเปิดเพื่อรับ cookie จาก browser
+  }),
+);
 
 app.use(morgan('dev'));
 app.use(express.json());

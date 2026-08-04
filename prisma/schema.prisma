@@ -29,7 +29,7 @@ model User {
   // Relation ลิงก์ไปยังตารางเฉพาะทาง
   studentProfile StudentProfile?
   teacherProfile TeacherProfile?
-  classes        Class[]         @relation("TeacherClasses") // สำหรับครูผู้สอน
+  courses        Course[]         @relation("TeacherCourses") // สำหรับครูผู้สอน
   enrollments    Enrollment[]
 }
 
@@ -61,19 +61,21 @@ enum statusClass {
   complete
 }
 
-// 2. ตารางคลาสเรียน (Class)
-model Class {
-  id          Int         @id @default(autoincrement())
+// 2. ตารางคลาสเรียน (Course)
+model Course {
+  id          String      @id @default(uuid())
+  code        String      @unique
   className   String
   description String?
   teacherId   String
   roomId      String?
+  maxStudents Int         @default(50)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   status      statusClass @default(upcoming)
 
   // Relation: เชื่อมโยงกลับไปหาครูผู้สอน
-  teacher     User         @relation("TeacherClasses", fields: [teacherId], references: [id])
+  teacher     User         @relation("TeacherCourses", fields: [teacherId], references: [id])
   // Relation: รายชื่อนักเรียนที่อยู่ในคลาสนี้
   enrollments Enrollment[]
 }
@@ -82,11 +84,11 @@ model Class {
 model Enrollment {
   id         Int      @id @default(autoincrement())
   studentId  String
-  classId    Int
+  courseId    String
   enrolledAt DateTime @default(now())
 
   student User  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  class   Class @relation(fields: [classId], references: [id], onDelete: Cascade)
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
-  @@unique([studentId, classId]) // ป้องกันไม่ให้นักเรียนคนเดิมลงซ้ำในคลาสเดิม
+  @@unique([studentId, courseId]) // ป้องกันไม่ให้นักเรียนคนเดิมลงซ้ำในคลาสเดิม
 }

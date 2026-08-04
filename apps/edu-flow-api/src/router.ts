@@ -1,9 +1,9 @@
-import { Router } from "express";
-import UserRouter from "./pkg/user/user.module";
-import { StudentRouter } from "./pkg/student-profile/student-profile.module";
-import { TeacherRouter } from "./pkg/teacher-profile/teacher-profile.module";
-import { handleRefreshToken } from "./middleware/checkToken";
-import { ClassRouter } from "./pkg/class/class.module";
+import { Router } from 'express';
+import UserRouter from './pkg/user/user.module';
+import { StudentRouter } from './pkg/student-profile/student-profile.module';
+import { TeacherRouter } from './pkg/teacher-profile/teacher-profile.module';
+import { handleRefreshToken } from './middleware/checkToken';
+import { ClassRouter } from './pkg/course/course.module';
 
 const AppRouter: Router = Router();
 

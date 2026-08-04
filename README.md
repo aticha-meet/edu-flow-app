@@ -4,7 +4,7 @@
 
 ✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/next?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/next?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
 
 ## Create Workspace with pnpm
 
@@ -15,12 +15,15 @@ pnpm dlx create-nx-workspace name --preset=next
 ```
 
 ## Add Build Project
+
 ```sh
 pnpm add -D @nx/framwork
 ```
+
 EX.
+
 ```sh
-pnpm add -D @nx/express 
+pnpm add -D @nx/express
 ```
 
 ## Run tasks
@@ -106,17 +109,17 @@ Nx Console is an editor extension that enriches your developer experience. It le
 
 Learn more:
 
-- [Learn more about this workspace setup](https://nx.dev/nx-api/next?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
+- [Learn more about this workspace setup](https://nx.dev/nx-api/next?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 - [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 - [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 - [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 
 And join the Nx community:
+
 - [Discord](https://go.nx.dev/community)
 - [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
 - [Our Youtube channel](https://www.youtube.com/@nxdevtools)
 - [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
 
 ## Project Structure
 
@@ -162,17 +165,17 @@ edu-flow-app/
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Monorepo | Nx |
-| Package manager | pnpm |
-| Frontend | Next.js 16, React 19, Tailwind CSS 4 |
-| Backend | Express, Node.js |
-| ORM | Prisma 6 |
-| Database | PostgreSQL 16 |
-| Auth | NextAuth (Google / GitHub OAuth) |
-| Containerization | Docker, Docker Compose |
-| Tunnel / HTTPS | Cloudflare Tunnel |
+| Layer            | Technology                           |
+| ---------------- | ------------------------------------ |
+| Monorepo         | Nx                                   |
+| Package manager  | pnpm                                 |
+| Frontend         | Next.js 16, React 19, Tailwind CSS 4 |
+| Backend          | Express, Node.js                     |
+| ORM              | Prisma 6                             |
+| Database         | PostgreSQL 16                        |
+| Auth             | NextAuth (Google / GitHub OAuth)     |
+| Containerization | Docker, Docker Compose               |
+| Tunnel / HTTPS   | Cloudflare Tunnel                    |
 
 ## Getting Started (Local Development)
 
@@ -187,12 +190,12 @@ pnpm exec nx serve edu-flow-api
 
 โปรเจกต์นี้ deploy ผ่าน Docker Compose รันทั้งหมด 4 service พร้อมกัน:
 
-| Service | หน้าที่ | Port (internal) |
-|---|---|---|
-| `web` | Next.js frontend | 3000 |
-| `api` | Express backend | 3333 |
-| `db` | PostgreSQL 16 | 5432 |
-| `cloudflared` | Cloudflare Tunnel (HTTPS + public domain) | - |
+| Service       | หน้าที่                                   | Port (internal) |
+| ------------- | ----------------------------------------- | --------------- |
+| `web`         | Next.js frontend                          | 3000            |
+| `api`         | Express backend                           | 3333            |
+| `db`          | PostgreSQL 16                             | 5432            |
+| `cloudflared` | Cloudflare Tunnel (HTTPS + public domain) | -               |
 
 ### Build และรันทั้งหมด
 
@@ -248,7 +251,7 @@ CF_TUNNEL_TOKEN=
 
 ## Live Environments
 
-| Environment | URL |
-|---|---|
+| Environment      | URL                       |
+| ---------------- | ------------------------- |
 | Web (Production) | https://app.edflow.online |
 | API (Production) | https://api.edflow.online |
