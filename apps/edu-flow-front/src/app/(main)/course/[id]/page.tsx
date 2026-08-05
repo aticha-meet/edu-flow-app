@@ -248,10 +248,13 @@ export default function CourseDetailPage() {
           </aside>
         ) : (
           <CourseSidebar
+            courseId={id}
             courseCode={courseCode}
             courseName={courseName}
             activeMenu={activeMenu}
-            onMenuChange={setActiveMenu}
+            onMenuChange={(menu) => {
+              if (menu !== 'test') setActiveMenu(menu);
+            }}
           />
         )}
 

@@ -29,7 +29,7 @@ model User {
   // Relation ลิงก์ไปยังตารางเฉพาะทาง
   studentProfile StudentProfile?
   teacherProfile TeacherProfile?
-  courses        Course[]         @relation("TeacherCourses") // สำหรับครูผู้สอน
+  courses        Course[]        @relation("TeacherCourses") // สำหรับครูผู้สอน
   enrollments    Enrollment[]
 }
 
@@ -78,17 +78,29 @@ model Course {
   teacher     User         @relation("TeacherCourses", fields: [teacherId], references: [id])
   // Relation: รายชื่อนักเรียนที่อยู่ในคลาสนี้
   enrollments Enrollment[]
+  tests       Test[]
+}
+
+model Test {
+  id        String   @id @default(uuid())
+  courseId  String
+  testName  String
+  testDate  DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 }
 
 // 3. ตารางกลางสำหรับการจับคู่นักเรียนเข้าคลาส (Many-to-Many Enrollment)
 model Enrollment {
   id         Int      @id @default(autoincrement())
   studentId  String
-  courseId    String
+  courseId   String
   enrolledAt DateTime @default(now())
 
-  student User  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student User   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, courseId]) // ป้องกันไม่ให้นักเรียนคนเดิมลงซ้ำในคลาสเดิม
 }
