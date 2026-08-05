@@ -1,9 +1,14 @@
 import { Router } from 'express';
-import { classController } from './course.controller';
+import { courseController } from './course.controller';
 
-export const ClassRouter: Router = Router();
+export const CourseRouter: Router = Router();
 
-ClassRouter.get('/class', (req, res) =>
-  classController.getListClasses(req, res),
+CourseRouter.get('/course', (req, res) =>
+  courseController.getListCourse(req, res),
 );
-ClassRouter.post('/class', (req, res) => classController.createClass(req, res));
+CourseRouter.post('/course', (req, res) =>
+  courseController.createCourse(req, res),
+);
+CourseRouter.get('/course/:id', (req, res) =>
+  courseController.getCourseById(req, res),
+);

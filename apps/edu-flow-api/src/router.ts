@@ -3,7 +3,7 @@ import UserRouter from './pkg/user/user.module';
 import { StudentRouter } from './pkg/student-profile/student-profile.module';
 import { TeacherRouter } from './pkg/teacher-profile/teacher-profile.module';
 import { handleRefreshToken } from './middleware/checkToken';
-import { ClassRouter } from './pkg/course/course.module';
+import { CourseRouter } from './pkg/course/course.module';
 
 const AppRouter: Router = Router();
 
@@ -15,6 +15,6 @@ AppRouter.use(handleRefreshToken, StudentRouter);
 
 // Teacher routes
 AppRouter.use(handleRefreshToken, TeacherRouter);
-AppRouter.use(handleRefreshToken, ClassRouter);
+AppRouter.use(handleRefreshToken, CourseRouter);
 
 export default AppRouter;

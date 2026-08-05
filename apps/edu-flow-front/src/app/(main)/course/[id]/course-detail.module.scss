@@ -1,0 +1,647 @@
+/* ─── Base ───────────────────────────────────────────────────── */
+.page {
+    min-height: 100vh;
+    background: #0b0f1a;
+    color: #f1f5f9;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+/* ─── Layout ─────────────────────────────────────────────────── */
+.layout {
+    display: flex;
+    min-height: calc(100vh - 64px); /* below navbar */
+}
+
+/* ─────────────────────────────────────────────────────────────
+   SIDEBAR
+───────────────────────────────────────────────────────────── */
+.sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: rgba(10, 14, 26, 0.95);
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    flex-direction: column;
+    position: static;
+    top: 64px;
+    height: calc(100vh - 64px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(99, 102, 241, 0.2) transparent;
+}
+
+.sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.2);
+    border-radius: 99px;
+}
+
+/* Course Banner */
+.courseBanner {
+    position: relative;
+    height: 120px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.bannerBg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4c1d95 100%);
+}
+
+.bannerPattern {
+    position: absolute;
+    inset: 0;
+    background-image:
+        radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.2) 0%, transparent 40%);
+}
+
+.bannerContent {
+    position: relative;
+    z-index: 1;
+    padding: 20px 20px 16px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.courseCode {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.02em;
+    margin: 0 0 4px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.courseName {
+    font-size: 0.75rem;
+    color: rgba(196, 181, 253, 0.85);
+    margin: 0;
+    font-weight: 500;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Section Label */
+.sectionLabel {
+    padding: 12px 20px 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #475569;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* Nav Menu */
+.navMenu {
+    list-style: none;
+    margin: 0;
+    padding: 8px 0;
+    flex: 1;
+}
+
+.navItem {
+    padding: 0 8px;
+}
+
+.navBtn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #64748b;
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    text-align: left;
+    position: relative;
+}
+
+.navBtn:hover {
+    color: #cbd5e1;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.navBtn.active {
+    color: #a5b4fc;
+    background: rgba(99, 102, 241, 0.12);
+    font-weight: 600;
+}
+
+.navBtn.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 20px;
+    background: linear-gradient(180deg, #6366f1, #8b5cf6);
+    border-radius: 0 3px 3px 0;
+}
+
+.navIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    flex-shrink: 0;
+    transition: all 0.18s ease;
+    color: inherit;
+}
+
+.navBtn:hover .navIcon {
+    background: rgba(99, 102, 241, 0.1);
+    color: #818cf8;
+}
+
+.navBtn.active .navIcon {
+    background: rgba(99, 102, 241, 0.15);
+    color: #818cf8;
+}
+
+.navLabel {
+    flex: 1;
+}
+
+.navBadge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 20px;
+    background: rgba(99, 102, 241, 0.2);
+    color: #818cf8;
+    min-width: 20px;
+    text-align: center;
+}
+
+.navDivider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.04);
+    margin: 8px 12px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   MAIN CONTENT
+───────────────────────────────────────────────────────────── */
+.content {
+    flex: 1;
+    min-width: 0;
+    padding: 32px 36px 60px;
+    overflow: auto;
+}
+
+/* ─── Content Header ─────────────────────────────────────────── */
+.contentHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: #475569;
+    margin-bottom: 8px;
+}
+
+.breadcrumb a {
+    color: #64748b;
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.breadcrumb a:hover {
+    color: #818cf8;
+}
+
+.breadcrumbSep {
+    color: #334155;
+}
+
+.contentTitleRow {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.contentTitle {
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin: 0;
+    background: linear-gradient(135deg, #f1f5f9 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.contentSubtitle {
+    font-size: 0.85rem;
+    color: #475569;
+    margin: 6px 0 0;
+}
+
+/* ─── Section Panel ──────────────────────────────────────────── */
+.panel {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    animation: fadeSlideIn 0.25s ease both;
+}
+
+@keyframes fadeSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.panelHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    gap: 12px;
+}
+
+.panelTitleGroup {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.panelIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    color: #818cf8;
+    flex-shrink: 0;
+}
+
+.panelTitle {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin: 0;
+}
+
+.panelSubtitle {
+    font-size: 0.78rem;
+    color: #475569;
+    margin: 2px 0 0;
+}
+
+.panelBody {
+    padding: 22px;
+}
+
+/* ─── Assignment Panel ───────────────────────────────────────── */
+.assignmentList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.assignmentItem {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    text-decoration: none;
+    color: inherit;
+}
+
+.assignmentItem:hover {
+    background: rgba(99, 102, 241, 0.05);
+    border-color: rgba(99, 102, 241, 0.15);
+    transform: translateX(3px);
+}
+
+.assignmentIcon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.assignmentInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.assignmentTitle {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin: 0 0 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.assignmentMeta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.75rem;
+    color: #475569;
+}
+
+.assignmentDue {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.statusChip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.68rem;
+    font-weight: 600;
+}
+
+.statusOpen {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    color: #6ee7b7;
+}
+
+.statusClosed {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+}
+
+.statusPending {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    color: #fcd34d;
+}
+
+.assignmentArrow {
+    color: #334155;
+    transition: color 0.15s, transform 0.15s;
+    flex-shrink: 0;
+}
+
+.assignmentItem:hover .assignmentArrow {
+    color: #6366f1;
+    transform: translateX(3px);
+}
+
+/* ─── Syllabus Panel ─────────────────────────────────────────── */
+.syllabusWeekList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.syllabusWeek {
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.weekHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+    background: rgba(255, 255, 255, 0.02);
+    border: none;
+    width: 100%;
+    text-align: left;
+    color: inherit;
+}
+
+.weekHeader:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.weekNumber {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    color: #818cf8;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.weekInfo {
+    flex: 1;
+}
+
+.weekTitle {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin: 0 0 2px;
+}
+
+.weekDesc {
+    font-size: 0.75rem;
+    color: #475569;
+    margin: 0;
+}
+
+.weekChevron {
+    color: #334155;
+    transition: transform 0.2s ease, color 0.15s;
+    flex-shrink: 0;
+}
+
+.weekChevron.open {
+    transform: rotate(180deg);
+    color: #6366f1;
+}
+
+.weekBody {
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    background: rgba(0, 0, 0, 0.15);
+    padding: 0;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.3s ease, padding 0.2s ease;
+}
+
+.weekBody.open {
+    max-height: 400px;
+    padding: 14px 16px;
+}
+
+.weekTopics {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.weekTopic {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.82rem;
+    color: #64748b;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.weekTopic:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.topicDot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(99, 102, 241, 0.5);
+    flex-shrink: 0;
+}
+
+/* ─── Empty State ────────────────────────────────────────────── */
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 48px 20px;
+    text-align: center;
+    color: #334155;
+}
+
+.emptyState svg {
+    opacity: 0.3;
+}
+
+.emptyState p {
+    font-size: 0.85rem;
+    margin: 0;
+    color: #475569;
+}
+
+/* ─── Loading Skeleton ───────────────────────────────────────── */
+.skeletonBanner {
+    height: 120px;
+    background: linear-gradient(90deg,
+        rgba(255, 255, 255, 0.03) 25%,
+        rgba(255, 255, 255, 0.06) 50%,
+        rgba(255, 255, 255, 0.03) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+.skeletonLine {
+    border-radius: 6px;
+    background: linear-gradient(90deg,
+        rgba(255, 255, 255, 0.03) 25%,
+        rgba(255, 255, 255, 0.07) 50%,
+        rgba(255, 255, 255, 0.03) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ─── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 900px) {
+    .layout {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .navMenu {
+        display: flex;
+        flex-wrap: wrap;
+        padding: 8px;
+        gap: 4px;
+    }
+
+    .navItem {
+        padding: 0;
+    }
+
+    .navBtn {
+        padding: 8px 12px;
+        border-radius: 8px;
+    }
+
+    .navBtn.active::before {
+        display: none;
+    }
+
+    .content {
+        padding: 20px 16px 40px;
+    }
+}

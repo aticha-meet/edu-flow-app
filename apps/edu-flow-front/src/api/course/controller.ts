@@ -1,6 +1,6 @@
 import { PAGE_PATH } from '@/config/pagePath';
 import axiosInstance from '@/config/axiosConfig';
-export const getListClasses = async (url: string, config: {}, params: any) => {
+export const getListCourse = async (url: string, config: {}, params: any) => {
   try {
     const request = await axiosInstance.get(`${PAGE_PATH.API_URL}${url}`, {
       params,
@@ -13,7 +13,7 @@ export const getListClasses = async (url: string, config: {}, params: any) => {
   }
 };
 
-export const createClass = async (data: {
+export const createCourse = async (data: {
   className: string;
   description?: string;
   teacherId: string;
@@ -25,7 +25,7 @@ export const createClass = async (data: {
 }) => {
   try {
     const request = await axiosInstance.post(
-      `${PAGE_PATH.API_URL}/class`,
+      `${PAGE_PATH.API_URL}/course`,
       data,
     );
     return request.data;

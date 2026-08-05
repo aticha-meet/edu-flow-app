@@ -370,7 +370,9 @@
 .modalContent {
     position: relative;
     width: 100%;
-    max-width: 520px;
+    max-width: 860px;
+    max-height: 90vh;
+    overflow-y: auto;
     background: rgba(15, 20, 35, 0.95);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
@@ -380,6 +382,23 @@
         0 0 0 1px rgba(99, 102, 241, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.05);
     animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* Custom scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(99, 102, 241, 0.3) transparent;
+}
+
+.modalContent::-webkit-scrollbar {
+    width: 5px;
+}
+
+.modalContent::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.modalContent::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.3);
+    border-radius: 99px;
 }
 
 @keyframes slideUp {
@@ -452,15 +471,29 @@
 
 /* ─── Modal Form ─────────────────────────────────────────────── */
 .modalForm {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 24px;
+}
+
+/* Full-width rows: description, messages, actions */
+.modalForm > .formGroupFull,
+.modalForm > .formMessage,
+.modalForm > .modalActions {
+    grid-column: 1 / -1;
 }
 
 .formGroup {
     display: flex;
     flex-direction: column;
     gap: 8px;
+}
+
+.formGroupFull {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    grid-column: 1 / -1;
 }
 
 .formLabel {
@@ -678,6 +711,15 @@
     .modalContent {
         padding: 28px 20px 24px;
         border-radius: 16px;
+        max-height: 92vh;
+    }
+
+    .modalForm {
+        grid-template-columns: 1fr;
+    }
+
+    .modalForm > .formGroupFull {
+        grid-column: 1;
     }
 
     .modalActions {

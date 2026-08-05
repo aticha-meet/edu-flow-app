@@ -1,6 +1,6 @@
 import prisma from '../../configs/prisma';
 
-export class ClassService {
+export class CourseService {
   /**
    * ดึง classes ทั้งหมด (สำหรับ ADMIN)
    */
@@ -92,4 +92,4 @@ export class ClassService {
   }
 }
 
-export const classService = new ClassService();
+export const courseService = new CourseService();

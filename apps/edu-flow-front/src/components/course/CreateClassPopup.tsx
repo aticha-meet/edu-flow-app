@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClass } from '@/api/course/controller';
+import { createCourse } from '@/api/course/controller';
 import { getTeachers } from '@/api/user/controller';
 import useUserStore from '@/store/userStore';
 
@@ -113,7 +113,7 @@ export const CreateClassPopup = ({
 
     setIsSubmitting(true);
     try {
-      await createClass({
+      await createCourse({
         className: formData.className.trim(),
         description: formData.description.trim() || undefined,
         teacherId: formData.teacherId,
@@ -228,7 +228,7 @@ export const CreateClassPopup = ({
             />
           </div>
 
-          <div className={styles?.formGroup}>
+          <div className={styles?.formGroupFull}>
             <label htmlFor="description" className={styles?.formLabel}>
               คำอธิบาย
             </label>

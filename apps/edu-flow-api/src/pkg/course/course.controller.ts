@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { classService } from './course.service';
+import { courseService } from './course.service';
 
-export class ClassController {
-  async getListClasses(req: Request, res: Response) {
+export class CourseController {
+  async getListCourse(req: Request, res: Response) {
     try {
       const { userId, role } = req.query as {
         userId: string;
@@ -10,20 +10,20 @@ export class ClassController {
       };
 
       if (role === 'ADMIN') {
-        const classData = await classService.findAllAdmin();
+        const classData = await courseService.findAllAdmin();
         return res
           .status(200)
           .json({ message: 'Successfully get class admin', data: classData });
       }
 
       if (role === 'TEACHER' || role === 'STUDENT') {
-        const classData = await classService.findByTeacher(userId);
+        const classData = await courseService.findByTeacher(userId);
         return res
           .status(200)
           .json({ message: 'Successfully get class teacher', data: classData });
       }
 
-      const classData = await classService.findByStudent(userId);
+      const classData = await courseService.findByStudent(userId);
       return res
         .status(200)
         .json({ message: 'Successfully get class student', data: classData });
@@ -35,21 +35,21 @@ export class ClassController {
     }
   }
 
-  async getClassById(req: Request, res: Response) {
+  async getCourseById(req: Request, res: Response) {
     try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) {
-        return res.status(400).json({ message: 'Invalid class ID' });
+      const id = req.params.id;
+      if (!id) {
+        return res.status(400).json({ message: 'Invalid course ID' });
       }
 
-      const classData = await classService.findById(id);
-      if (!classData) {
-        return res.status(404).json({ message: 'Class not found' });
+      const courseData = await courseService.findById(id);
+      if (!courseData) {
+        return res.status(404).json({ message: 'course not found' });
       }
 
       return res
         .status(200)
-        .json({ message: 'Successfully get class detail', data: classData });
+        .json({ message: 'Successfully get course detail', data: courseData });
     } catch (err) {
       console.log(err);
       return res
@@ -58,7 +58,7 @@ export class ClassController {
     }
   }
 
-  async createClass(req: Request, res: Response) {
+  async createCourse(req: Request, res: Response) {
     try {
       const {
         className,
@@ -85,7 +85,7 @@ export class ClassController {
       }
 
       // ตรวจสอบว่า teacherId มีตัวตนจริงและเป็น TEACHER หรือ ADMIN
-      const teacher = await classService.findTeacher(teacherId);
+      const teacher = await courseService.findTeacher(teacherId);
 
       if (!teacher) {
         return res.status(404).json({ message: 'Teacher not found' });
@@ -97,7 +97,7 @@ export class ClassController {
           .json({ message: 'The specified user is not a teacher' });
       }
 
-      const newClass = await classService.create({
+      const newClass = await courseService.create({
         className,
         description,
         teacherId,
@@ -117,4 +117,4 @@ export class ClassController {
   }
 }
 
-export const classController = new ClassController();
+export const courseController = new CourseController();

@@ -1,8 +1,7 @@
 'use client';
-import { Navbar } from '@/components/navbar';
 import { useEffect, useState } from 'react';
-import styles from './class.module.scss';
-import { getListClasses } from '@/api/course/controller';
+import styles from './course.module.scss';
+import { getListCourse } from '@/api/course/controller';
 import useUserStore from '@/store/userStore';
 import { useSession } from 'next-auth/react';
 import { CreateClassPopup } from '@/components/course/CreateClassPopup';
@@ -78,7 +77,7 @@ export default function ClassPage() {
   const fetchClasses = async () => {
     setIsLoading(true);
     try {
-      const data = await getListClasses(
+      const data = await getListCourse(
         '/course',
         {},
         {
@@ -134,8 +133,6 @@ export default function ClassPage() {
 
   return (
     <div className={styles.page}>
-      <Navbar />
-
       <main className={styles.main}>
         {/* ── Header ── */}
         <div className={styles.header}>

@@ -1,6 +1,6 @@
 import { jsPDF } from 'jspdf';
 import { sarabunRegularBase64 } from '@/config/fonts/Sarabun-Regular';
-import type { ExamQuestion } from '@/app/exam/page';
+import type { ExamQuestion } from '@/app/(main)/exam/page';
 
 // ─── Types ───────────────────────────────────────────────────────
 interface GenerateExamPDFParams {
