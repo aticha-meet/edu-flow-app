@@ -1,4 +1,5 @@
 'use client';
+//.Hello
 
 import styles from '@/app/(main)/exam/exam.module.scss';
 import { ScoreRing } from './ScoreRing';
