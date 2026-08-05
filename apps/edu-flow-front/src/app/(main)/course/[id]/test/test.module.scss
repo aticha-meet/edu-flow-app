@@ -170,6 +170,42 @@
   background: #4f46e5;
 }
 
+/* ─── Empty State ─────────────────────────────────────────────── */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 64px 20px;
+  text-align: center;
+  color: #475569;
+}
+.emptyIcon { font-size: 2.5rem; margin-bottom: 4px; }
+.emptyState p { margin: 0; font-size: 0.95rem; color: #64748b; }
+.emptyState span { font-size: 0.8rem; color: #334155; }
+
+/* ─── Skeleton Loading ────────────────────────────────────────── */
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.skeletonCard {
+  height: 82px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.07) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── Meta items in test cards ────────────────────────────────── */
+.metaItem { color: #64748b; }
+.metaDivider { color: #334155; }
+
 .modalBackdrop {
   position: fixed;
   z-index: 20;

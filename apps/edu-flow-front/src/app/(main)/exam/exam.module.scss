@@ -600,7 +600,20 @@
     border-color: rgba(251, 191, 36, 0.4);
 }
 
+/* ─── Review Container ────────────────────────────────────────── */
+.reviewContainer {
+    animation: fadeIn 0.4s ease;
+}
+
+/* ─── Answer Option Disabled (review neutral state) ───────────── */
+.answerOptionDisabled {
+    composes: answerOption;
+    cursor: default;
+    opacity: 0.5;
+}
+
 /* ─── Review Section ──────────────────────────────────────────── */
+
 .reviewHeader {
     display: flex;
     align-items: center;

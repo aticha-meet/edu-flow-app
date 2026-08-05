@@ -1,0 +1,26 @@
+{
+    "title": "ชื่อแบบทดสอบ",
+    "questions": [
+        {
+            "questionText": "คำถาม...",
+            "choices": [
+                {
+                    "value": "ตัวเลือก ก",
+                    "isCorrect": false
+                },
+                {
+                    "value": "ตัวเลือก ข",
+                    "isCorrect": true
+                },
+                {
+                    "value": "ตัวเลือก ค",
+                    "isCorrect": false
+                },
+                {
+                    "value": "ตัวเลือก ง",
+                    "isCorrect": false
+                }
+            ]
+        }
+    ]
+}

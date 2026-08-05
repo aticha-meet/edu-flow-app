@@ -1,22 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { getListCourse } from '@/api/course/controller';
+import { getTestsByCourse, createTest } from '@/api/test/controller';
 import { CourseSidebar } from '@/components/course/CourseSidebar';
 import { CreateTestModal } from '@/components/course/test/CreateTestModal';
 import { TestList } from '@/components/course/test/TestList';
+import type { TestSummary } from '@/types/TestType';
 import styles from './test.module.scss';
-
-interface CourseTest {
-  id: string;
-  courseId: string;
-  testName: string;
-  testDate: Date;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import useUserStore from '@/store/userStore';
 
 interface CourseDetail {
   id: string;
@@ -24,78 +18,74 @@ interface CourseDetail {
   className: string;
 }
 
-const createMockTests = (courseId: string): CourseTest[] => [
-  {
-    id: 'test-practice-01',
-    courseId,
-    testName: 'แบบทดสอบบทที่ 1: แนวคิดพื้นฐาน',
-    testDate: new Date('2026-08-12T09:00:00+07:00'),
-    createdAt: new Date('2026-08-01T09:00:00+07:00'),
-    updatedAt: new Date('2026-08-01T09:00:00+07:00'),
-  },
-  {
-    id: 'test-practice-02',
-    courseId,
-    testName: 'แบบทดสอบบทที่ 2: เครื่องมือและเทคนิค',
-    testDate: new Date('2026-08-19T09:00:00+07:00'),
-    createdAt: new Date('2026-08-03T09:00:00+07:00'),
-    updatedAt: new Date('2026-08-03T09:00:00+07:00'),
-  },
-  {
-    id: 'test-practice-03',
-    courseId,
-    testName: 'แบบทดสอบทบทวนก่อนกลางภาค',
-    testDate: new Date('2026-08-26T13:00:00+07:00'),
-    createdAt: new Date('2026-08-05T09:00:00+07:00'),
-    updatedAt: new Date('2026-08-05T09:00:00+07:00'),
-  },
-];
-
 export default function TestPracticePage() {
   const params = useParams();
   const router = useRouter();
+  const session = useUserStore((state) => state.session) as { id: string };
   const id = params?.id as string;
+
   const [course, setCourse] = useState<CourseDetail | null>(null);
+  const [tests, setTests] = useState<TestSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [tests, setTests] = useState<CourseTest[]>(() => createMockTests(id));
+
+  // ─── Fetch course & tests ─────────────────────────────────────
+  const fetchData = useCallback(async () => {
+    if (!id) return;
+    setIsLoading(true);
+    try {
+      const [courseData, testsData] = await Promise.all([
+        getListCourse(`/course/${id}`, {}, {}),
+        getTestsByCourse(id),
+      ]);
+      setCourse(courseData);
+      setTests(testsData);
+    } catch (error) {
+      console.error('Failed to fetch data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [id]);
 
   useEffect(() => {
-    const fetchCourse = async () => {
-      try {
-        setCourse(await getListCourse(`/course/${id}`, {}, {}));
-      } catch (error) {
-        console.error('Failed to fetch course:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (id) fetchCourse();
-  }, [id]);
+    fetchData();
+  }, [fetchData]);
 
   const courseName = course?.className ?? 'รายวิชา';
   const courseCode = course?.code ?? `COURSE-${id}`;
+  const userId = session?.id || '';
 
-  const handleCreateTest = (testName: string, testDate: Date) => {
-    const now = new Date();
-    setTests((currentTests) => [
-      ...currentTests,
-      {
-        id: crypto.randomUUID(),
-        courseId: id,
-        testName,
-        testDate,
-        createdAt: now,
-        updatedAt: now,
-      },
-    ]);
+  // ─── Create test handler ──────────────────────────────────────
+  const handleCreate = async (
+    title: string,
+    questions: Array<{
+      questionText: string;
+      choices: Array<{ value: string; isCorrect: boolean }>;
+    }>,
+  ) => {
+    await createTest({
+      title,
+      courseId: id,
+      createdById: userId,
+      questions: questions.map((q, qi) => ({
+        questionText: q.questionText,
+        order: qi,
+        choices: q.choices.map((c, ci) => ({
+          value: c.value,
+          isCorrect: c.isCorrect,
+          order: ci,
+        })),
+      })),
+    });
     setIsCreateModalOpen(false);
+    // Refresh list
+    await fetchData();
   };
 
   return (
     <div className={styles.page}>
       <div className={styles.layout}>
+        {/* ── Sidebar ── */}
         {isLoading ? (
           <aside
             className={styles.sidebar}
@@ -113,7 +103,9 @@ export default function TestPracticePage() {
           />
         )}
 
+        {/* ── Content ── */}
         <main className={styles.content}>
+          {/* Breadcrumb */}
           <nav className={styles.breadcrumb} aria-label="breadcrumb">
             <Link href="/course">ห้องเรียน</Link>
             <span>/</span>
@@ -122,14 +114,12 @@ export default function TestPracticePage() {
             <span>Test Practice</span>
           </nav>
 
+          {/* Header */}
           <header className={styles.header}>
             <div>
               <span className={styles.eyebrow}>COURSE TESTS</span>
               <h1>Test Practice</h1>
-              <p>
-                แบบทดสอบทั้งหมดสำหรับรายวิชานี้
-                เลือกแบบทดสอบที่ต้องการเพื่อเริ่มทำข้อสอบ
-              </p>
+              <p>แบบทดสอบทั้งหมดสำหรับรายวิชานี้ — เลือกแบบทดสอบเพื่อเริ่มทำ</p>
             </div>
             <div className={styles.headerActions}>
               <div className={styles.count}>{tests.length} แบบทดสอบ</div>
@@ -138,19 +128,33 @@ export default function TestPracticePage() {
                 type="button"
                 onClick={() => setIsCreateModalOpen(true)}
                 aria-label="เพิ่มแบบทดสอบ"
+                id="add-test-btn"
               >
                 +
               </button>
             </div>
           </header>
 
-          <TestList tests={tests} onStart={() => router.push('/exam')} />
+          {/* Test List */}
+          {isLoading ? (
+            <div className={styles.loadingState}>
+              {[1, 2, 3].map((i) => (
+                <div key={i} className={styles.skeletonCard} />
+              ))}
+            </div>
+          ) : (
+            <TestList tests={tests} />
+          )}
         </main>
       </div>
+
+      {/* Create Modal */}
       {isCreateModalOpen && (
         <CreateTestModal
+          courseId={id}
+          createdById={userId}
           onClose={() => setIsCreateModalOpen(false)}
-          onCreate={handleCreateTest}
+          onCreate={handleCreate}
         />
       )}
     </div>

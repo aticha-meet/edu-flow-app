@@ -31,6 +31,8 @@ model User {
   teacherProfile TeacherProfile?
   courses        Course[]        @relation("TeacherCourses") // สำหรับครูผู้สอน
   enrollments    Enrollment[]
+  attempts       Attempt[]
+  tests          Test[]          @relation("createdTests")
 }
 
 // 👩‍🏫 ตารางเก็บข้อมูลเฉพาะของครู
@@ -82,14 +84,18 @@ model Course {
 }
 
 model Test {
-  id        String   @id @default(uuid())
-  courseId  String
-  testName  String
-  testDate  DateTime
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id       String @id @default(cuid())
+  title    String
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
-  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdById String
+  createdBy   User   @relation("createdTests", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+
+  questions Question[]
+  attempts  Attempt[]
 }
 
 // 3. ตารางกลางสำหรับการจับคู่นักเรียนเข้าคลาส (Many-to-Many Enrollment)
@@ -103,4 +109,55 @@ model Enrollment {
   course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, courseId]) // ป้องกันไม่ให้นักเรียนคนเดิมลงซ้ำในคลาสเดิม
+}
+
+model Attempt {
+  id        String @id @default(cuid())
+  studentId String
+  student   User   @relation(fields: [studentId], references: [id])
+
+  testId String
+  test   Test   @relation(fields: [testId], references: [id])
+
+  startedAt   DateTime  @default(now())
+  submittedAt DateTime?
+  score       Int?
+
+  answers StudentAnswer[]
+}
+
+model Question {
+  id     String @id @default(cuid())
+  testId String
+  test   Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  questionText String
+  order        Int    @default(0) // ลำดับข้อ
+
+  choices        Choice[]
+  studentAnswers StudentAnswer[]
+}
+
+model Choice {
+  id         String   @id @default(cuid())
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  value     String
+  isCorrect Boolean @default(false)
+  order     Int     @default(0)
+
+  studentAnswers StudentAnswer[]
+}
+
+model StudentAnswer {
+  id        String  @id @default(cuid())
+  attemptId String
+  attempt   Attempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id])
+
+  choiceId String
+  choice   Choice @relation(fields: [choiceId], references: [id])
 }
