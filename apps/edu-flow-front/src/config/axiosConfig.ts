@@ -21,7 +21,12 @@ axiosInstance.interceptors.request.use(
 
         // ดึง session และแนบ token ไปกับทุก request
         const session = await getSession();
-        if (session?.refreshToken) {
+        // @ts-ignore - session.backendToken is added dynamically
+        if (session?.backendToken) {
+            // @ts-ignore
+            config.headers['Authorization'] = `Bearer ${session.backendToken}`;
+        } else if (session?.refreshToken) {
+            // Fallback for transition
             config.headers['Authorization'] = `Bearer ${session.refreshToken}`;
         }
 

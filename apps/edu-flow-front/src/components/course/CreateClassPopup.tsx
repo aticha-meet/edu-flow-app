@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createCourse } from '@/api/course/controller';
 import { getTeachers } from '@/api/user/controller';
-import useUserStore from '@/store/userStore';
+import { useSession } from 'next-auth/react';
 
 interface formDataType {
   className: string;
@@ -53,7 +53,8 @@ export const CreateClassPopup = ({
   formError,
   formSuccess,
 }: CreatePopupType) => {
-  const userSession = useUserStore((state: any) => state.session);
+  const { data: sessionData } = useSession();
+  const userSession = sessionData?.user as any;
   const [teachers, setTeachers] = useState<TeacherOption[]>([]);
   const [isLoadingTeachers, setIsLoadingTeachers] = useState(false);
 

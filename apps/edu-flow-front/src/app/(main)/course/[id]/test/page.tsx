@@ -6,12 +6,10 @@ import { useParams, useRouter } from 'next/navigation';
 import { getListCourse } from '@/api/course/controller';
 import { getTestsByCourse, createTest } from '@/api/test/controller';
 import { CourseSidebar } from '@/components/course/CourseSidebar';
-import { CreateTestModal } from '@/components/course/test/CreateTestModal';
 import { TestList } from '@/components/course/test/TestList';
 import type { TestSummary } from '@/types/test-type';
 import styles from './test.module.scss';
-import useUserStore from '@/store/userStore';
-import { SessionType } from '@/types/session-type';
+import { useSession } from 'next-auth/react';
 
 interface CourseDetail {
   id: string;
@@ -22,7 +20,9 @@ interface CourseDetail {
 export default function TestPracticePage() {
   const params = useParams();
   const router = useRouter();
-  const session = useUserStore((state) => state.session) as SessionType;
+  const { data: sessionData } = useSession();
+  console.log(sessionData);
+  const user = sessionData?.user as any;
   const id = params?.id as string;
 
   const [course, setCourse] = useState<CourseDetail | null>(null);
@@ -54,7 +54,7 @@ export default function TestPracticePage() {
 
   const courseName = course?.className ?? 'รายวิชา';
   const courseCode = course?.code ?? `COURSE-${id}`;
-  const userId = session?.id || '';
+  const userId = user?.id || '';
 
   // ─── Create test handler ──────────────────────────────────────
   const handleCreate = async (
@@ -84,8 +84,7 @@ export default function TestPracticePage() {
   };
 
   // Check role
-  const isTeacherOrAdmin =
-    session?.role === 'TEACHER' || session?.role === 'ADMIN';
+  const isTeacherOrAdmin = user?.role === 'TEACHER' || user?.role === 'ADMIN';
 
   return (
     <div className={styles.page}>
@@ -102,7 +101,7 @@ export default function TestPracticePage() {
             courseCode={courseCode}
             courseName={courseName}
             activeMenu="test"
-            userRole={session?.role}
+            userRole={user?.role}
             onMenuChange={(menu) => {
               if (menu !== 'test') router.push(`/course/${id}`);
             }}

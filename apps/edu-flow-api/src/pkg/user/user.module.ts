@@ -5,6 +5,7 @@ const UserRouter: Router = Router();
 
 UserRouter.get('/users', (req, res) => userController.getListUsers(req, res));
 UserRouter.post('/user/login', (req, res) => userController.getUser(req, res));
+// UserRouter.post('/auth/google-sync', (req, res) => userController.googleSync(req, res));
 UserRouter.get('/users/student', (req, res) =>
   userController.getStudent(req, res),
 );

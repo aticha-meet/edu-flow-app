@@ -30,6 +30,50 @@ export class UserController {
     }
   }
 
+  async googleSync(req: Request, res: Response) {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ message: 'Email is required' });
+      }
+
+      const userData = await userService.findByEmail(email);
+      if (!userData) {
+        return res.status(404).json({ message: 'User not found in system' });
+      }
+
+      // Generate Backend JWT Token
+      const jwt = require('jsonwebtoken');
+      const secret =
+        process.env.JWT_SECRET ||
+        process.env.NEXTAUTH_SECRET ||
+        'fallback-secret-key';
+      const backendToken = jwt.sign(
+        {
+          id: userData.id,
+          role: userData.role,
+          email: userData.email,
+        },
+        secret,
+        { expiresIn: '7d' },
+      );
+
+      return res.status(200).json({
+        message: 'Sync successfully',
+        data: {
+          id: userData.id,
+          role: userData.role,
+          backendToken,
+        },
+      });
+    } catch (err) {
+      console.error('Google Sync Error:', err);
+      return res
+        .status(500)
+        .json({ message: 'Internal server error', error: err });
+    }
+  }
+
   async getStudent(req: Request, res: Response) {
     try {
       const students = await userService.findStudents();

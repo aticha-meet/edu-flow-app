@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import useUserStore from '@/store/userStore';
+import { useSession } from 'next-auth/react';
 import { SessionType } from '@/types/session-type';
 
 export const useRoleGuard = (
@@ -8,22 +8,24 @@ export const useRoleGuard = (
   fallbackRoute: string = '/',
 ) => {
   const router = useRouter();
-  const session = useUserStore((state: any) => state.session);
+  const { data: session, status } = useSession();
 
   useEffect(() => {
     // If we have session loaded but role doesn't match
-    if (session && session.role) {
-      if (!allowedRoles.includes(session.role)) {
+    if (status === 'authenticated' && session?.user) {
+      if (!allowedRoles.includes((session.user as any).role)) {
         router.push(fallbackRoute);
       }
+    } else if (status === 'unauthenticated') {
+      router.push('/login');
     }
-  }, [session, allowedRoles, fallbackRoute, router]);
+  }, [session, status, allowedRoles, fallbackRoute, router]);
+
+  const role = session?.user ? (session.user as any).role : null;
 
   return {
-    session,
-    isAllowed: session?.role ? allowedRoles.includes(session.role) : false,
-  } as {
-    session: SessionType;
-    isAllowed: boolean;
+    session: session,
+    status,
+    isAllowed: role ? allowedRoles.includes(role) : false,
   };
 };

@@ -61,9 +61,10 @@ export default function TestManagePage() {
     fetchData();
   }, [fetchData]);
 
+  const user = session?.user as any;
   const courseName = course?.className ?? 'รายวิชา';
   const courseCode = course?.code ?? `COURSE-${id}`;
-  const userId = session?.id || '';
+  const userId = user?.id || '';
 
   // ─── Handlers ──────────────────────────────────────
   const handleCreate = async (
@@ -121,7 +122,7 @@ export default function TestManagePage() {
             courseCode={courseCode}
             courseName={courseName}
             activeMenu="test-manage"
-            userRole={session?.role}
+            userRole={user?.role}
             onMenuChange={(menu) => {
               if (menu === 'test-manage') return;
               if (menu === 'test') {

@@ -1,7 +1,6 @@
 import React from 'react';
 import styles from '@/components/login/rightCard.module.scss';
 import { signIn } from 'next-auth/react';
-import { getListUsers } from '@/api/user/controller';
 
 export const RightCard = () => {
   const handleGoogleLogin = async (provider: string) => {
@@ -10,8 +9,6 @@ export const RightCard = () => {
         callbackUrl: '/course',
         redirect: false,
       });
-      const users = await getListUsers('/users');
-      console.log(users);
     } catch (error) {
       console.error('Error during Google login:', error);
     }

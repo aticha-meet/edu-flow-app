@@ -20,60 +20,34 @@ export async function authMiddleware(
     res: Response,
     next: NextFunction
 ) {
-    // Next-Auth ตั้งชื่อ cookie ต่างกันตาม env
-    // development → next-auth.session-token
-    // production  → __Secure-next-auth.session-token
-    const token =
-        req.cookies?.['next-auth.session-token'] ||
-        req.cookies?.['__Secure-next-auth.session-token'];
-
-    if (!token) {
-        return res.status(401).json({ message: 'Unauthorized: No session cookie' });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'Unauthorized: No token provided' });
     }
 
+    const token = authHeader.split(' ')[1];
+
     try {
-        const secret = process.env.NEXTAUTH_SECRET;
-        if (!secret) {
-            throw new Error('NEXTAUTH_SECRET is not defined');
-        }
+        const secret = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || 'fallback-secret-key';
+        const jwt = require('jsonwebtoken');
+        
+        // Verify token
+        const payload = jwt.verify(token, secret);
 
-        // Next-Auth v4 เข้ารหัส session token เป็น JWE (A256CBC-HS512)
-        // ต้องใช้ key ที่ derive จาก secret ด้วย HKDF
-        const encoder = new TextEncoder();
-        const keyMaterial = await crypto.subtle.importKey(
-            'raw',
-            encoder.encode(secret),
-            { name: 'HKDF' },
-            false,
-            ['deriveKey']
-        );
-
-        const encryptionKey = await crypto.subtle.deriveKey(
-            {
-                name: 'HKDF',
-                hash: 'SHA-256',
-                salt: encoder.encode(''),
-                info: encoder.encode('NextAuth.js Generated Encryption Key'),
-            },
-            keyMaterial,
-            { name: 'AES-CBC', length: 256 },
-            false,
-            ['decrypt']
-        );
-
-        const { payload } = await jwtDecrypt(token, encryptionKey);
-
-        // payload คือข้อมูลที่ Next-Auth เก็บใน JWT callback
+        // payload contains id, email, role
         req.user = {
-            email: (payload as any).email || '',
-            name: (payload as any).name || '',
-            picture: (payload as any).picture || '',
-            accessToken: (payload as any).accessToken,
+            email: payload.email || '',
+            name: payload.name || '',
+            picture: payload.picture || '',
+            accessToken: token, // the backendToken itself
         };
+
+        // Attach additional payload if needed
+        (req as any).userPayload = payload;
 
         next();
     } catch (err) {
-        console.error('Session token decrypt failed:', err);
-        return res.status(401).json({ message: 'Unauthorized: Invalid session' });
+        console.error('Token verification failed:', err);
+        return res.status(401).json({ message: 'Unauthorized: Invalid token' });
     }
 }

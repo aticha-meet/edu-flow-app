@@ -2,12 +2,9 @@
 import { useEffect, useState } from 'react';
 import styles from './course.module.scss';
 import { getListCourse } from '@/api/course/controller';
-import useUserStore from '@/store/userStore';
-import { useSession } from 'next-auth/react';
 import { CreateClassPopup } from '@/components/course/CreateClassPopup';
 import { useRouter } from 'next/navigation';
 import { useRoleGuard } from '@/utils/useRoleGuard';
-import { SessionType } from '@/types/session-type';
 
 // ─── Types ───────────────────────────────────────────────────────
 interface ClassItem {
@@ -51,16 +48,17 @@ const STATUS_LABEL: Record<ClassItem['status'], string> = {
 
 export default function ClassPage() {
   const router = useRouter();
-  // const session = useSession();
+
+  const { session, status, isAllowed } = useRoleGuard(
+    ['TEACHER', 'ADMIN', 'STUDENT'],
+    '/login',
+  );
+  // Note: we can allow everyone on the main course list, so maybe just use useSession?
+  // Let's use useRoleGuard with all roles to ensure login.
+
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [filter, setFilter] = useState<'all' | ClassItem['status']>('all');
-  const getUserFromStore = useUserStore((state: any) => state.getUserFromStore);
-  const {
-    session,
-  }: {
-    session: SessionType;
-  } = useRoleGuard(['TEACHER', 'ADMIN'], '/course');
 
   // ─── Create Class Modal State ─────────────────────────────────
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -78,20 +76,21 @@ export default function ClassPage() {
   const [formSuccess, setFormSuccess] = useState('');
 
   // ─── Check if user is ADMIN ───────────────────────────────────
-  const isAdmin = sessionFromStore?.role === 'ADMIN';
+  const user = session?.user as any;
+  const isAdmin = user?.role === 'ADMIN';
 
   const fetchClasses = async () => {
+    if (!user?.id) return;
     setIsLoading(true);
     try {
       const data = await getListCourse(
         '/course',
         {},
         {
-          userId: sessionFromStore.id,
-          role: sessionFromStore.role,
+          userId: user.id,
+          role: user.role,
         },
       );
-      console.log(data);
       setClasses(data);
     } catch (err) {
       console.error('Error fetching classes:', err);
@@ -100,28 +99,18 @@ export default function ClassPage() {
     }
   };
 
-  const fetchUserLogin = async () => {
-    try {
-      await getUserFromStore(session.data?.user.email);
-    } catch (err) {
-      console.error('Error fetching classes:', err);
+  useEffect(() => {
+    if (user?.id && classes.length === 0) {
+      fetchClasses();
     }
-  };
-
-  useEffect(() => {
-    if (session.data?.user?.email) fetchUserLogin();
-  }, [session.data?.user?.email, session]);
-
-  useEffect(() => {
-    if (sessionFromStore?.id && classes.length === 0) fetchClasses();
-  }, [sessionFromStore?.id, classes]);
+  }, [user?.id, classes]);
 
   // ─── Create Class Handlers ────────────────────────────────────
   const handleOpenModal = () => {
     setFormData({
       className: '',
       description: '',
-      teacherId: '',
+      teacherId: user?.id || '',
       roomId: '',
       code: '',
       maxStudents: 50,
