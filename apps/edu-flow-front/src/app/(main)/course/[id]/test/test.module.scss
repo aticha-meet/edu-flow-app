@@ -151,6 +151,11 @@
   font-size: 0.78rem;
   margin: 0;
 }
+.cardActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 .startButton {
   display: inline-flex;
   align-items: center;
@@ -168,6 +173,25 @@
 }
 .startButton:hover {
   background: #4f46e5;
+}
+.deleteButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.deleteButton:hover {
+  background: #ef4444;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
 }
 
 /* ─── Empty State ─────────────────────────────────────────────── */

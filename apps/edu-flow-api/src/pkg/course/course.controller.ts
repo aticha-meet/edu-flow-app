@@ -16,17 +16,25 @@ export class CourseController {
           .json({ message: 'Successfully get class admin', data: classData });
       }
 
-      if (role === 'TEACHER' || role === 'STUDENT') {
-        const classData = await courseService.findByTeacher(userId);
-        return res
-          .status(200)
-          .json({ message: 'Successfully get class teacher', data: classData });
-      }
+      const classData =
+        role === 'TEACHER'
+          ? await courseService.findByTeacher(userId)
+          : await courseService.findByStudent(userId);
 
-      const classData = await courseService.findByStudent(userId);
-      return res
-        .status(200)
-        .json({ message: 'Successfully get class student', data: classData });
+      const data =
+        role === 'STUDENT'
+          ? classData.map((item: any) => item.course)
+          : classData;
+
+      return role === 'TEACHER'
+        ? res.status(200).json({
+            message: 'Successfully get class teacher',
+            data: data,
+          })
+        : res.status(200).json({
+            message: 'Successfully get class student',
+            data: data,
+          });
     } catch (err) {
       console.log(err);
       return res

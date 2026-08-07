@@ -3,14 +3,14 @@
 import styles from './course-components.module.scss';
 import { useRouter } from 'next/navigation';
 
-
-export type MenuKey = 'assignment' | 'syllabus' | 'test';
+export type MenuKey = 'assignment' | 'syllabus' | 'test' | 'test-manage';
 
 interface MenuItem {
   key: MenuKey;
   label: string;
   icon: React.ReactNode;
   badge?: number;
+  hide?: boolean;
 }
 
 interface CourseSidebarProps {
@@ -18,20 +18,39 @@ interface CourseSidebarProps {
   courseCode: string;
   courseName: string;
   activeMenu: MenuKey;
+  userRole?: 'TEACHER' | 'ADMIN' | 'STUDENT';
   onMenuChange: (key: MenuKey) => void;
 }
 
 const MenuIcon = ({ name }: { name: string }) => {
   const icons: Record<string, React.ReactNode> = {
     assignment: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <rect x="9" y="2" width="6" height="4" rx="1" ry="1" />
         <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
         <path d="M12 11h4M12 16h4M8 11h.01M8 16h.01" />
       </svg>
     ),
     syllabus: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
         <polyline points="14 2 14 8 20 8" />
         <line x1="16" y1="13" x2="8" y2="13" />
@@ -40,9 +59,33 @@ const MenuIcon = ({ name }: { name: string }) => {
       </svg>
     ),
     test: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <path d="M9 11l3 3L22 4" />
         <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+      </svg>
+    ),
+    'test-manage': (
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M12 20h9" />
+        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
       </svg>
     ),
   };
@@ -54,13 +97,31 @@ export const CourseSidebar = ({
   courseCode,
   courseName,
   activeMenu,
+  userRole,
   onMenuChange,
 }: CourseSidebarProps) => {
   const router = useRouter();
+
+  console.log(userRole);
+
   const menuItems: MenuItem[] = [
-    { key: 'assignment', label: 'Assignment', icon: <MenuIcon name="assignment" /> },
-    { key: 'syllabus',   label: 'Course Syllabus', icon: <MenuIcon name="syllabus" /> },
+    {
+      key: 'assignment',
+      label: 'Assignment',
+      icon: <MenuIcon name="assignment" />,
+    },
+    {
+      key: 'syllabus',
+      label: 'Course Syllabus',
+      icon: <MenuIcon name="syllabus" />,
+    },
     { key: 'test', label: 'Test Practice', icon: <MenuIcon name="test" /> },
+    {
+      key: 'test-manage',
+      label: 'Manage Tests',
+      icon: <MenuIcon name="test-manage" />,
+      hide: userRole === 'STUDENT',
+    },
   ];
 
   return (
@@ -80,32 +141,36 @@ export const CourseSidebar = ({
 
       {/* Nav Menu */}
       <ul className={styles.navMenu} role="menubar">
-        {menuItems.map((item, idx) => (
-          <li key={item.key} className={styles.navItem} role="none">
-            {idx > 0 && (
-              <div className={styles.navDivider} />
-            )}
-            <button
-              role="menuitem"
-              id={`sidebar-${item.key}`}
-              className={`${styles.navBtn} ${activeMenu === item.key ? styles.active : ''}`}
-              onClick={() => {
-                if (item.key === 'test') {
-                  router.push(`/course/${courseId}/test`);
-                  return;
-                }
-                onMenuChange(item.key);
-              }}
-              aria-current={activeMenu === item.key ? 'page' : undefined}
-            >
-              <span className={styles.navIcon}>{item.icon}</span>
-              <span className={styles.navLabel}>{item.label}</span>
-              {item.badge !== undefined && item.badge > 0 && (
-                <span className={styles.navBadge}>{item.badge}</span>
-              )}
-            </button>
-          </li>
-        ))}
+        {menuItems
+          .filter((item) => !item.hide)
+          .map((item, idx) => (
+            <li key={item.key} className={styles.navItem} role="none">
+              {idx > 0 && <div className={styles.navDivider} />}
+              <button
+                role="menuitem"
+                id={`sidebar-${item.key}`}
+                className={`${styles.navBtn} ${activeMenu === item.key ? styles.active : ''}`}
+                onClick={() => {
+                  if (item.key === 'test') {
+                    router.push(`/course/${courseId}/test`);
+                    return;
+                  }
+                  if (item.key === 'test-manage') {
+                    router.push(`/course/${courseId}/test/manage`);
+                    return;
+                  }
+                  onMenuChange(item.key);
+                }}
+                aria-current={activeMenu === item.key ? 'page' : undefined}
+              >
+                <span className={styles.navIcon}>{item.icon}</span>
+                <span className={styles.navLabel}>{item.label}</span>
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span className={styles.navBadge}>{item.badge}</span>
+                )}
+              </button>
+            </li>
+          ))}
       </ul>
     </aside>
   );

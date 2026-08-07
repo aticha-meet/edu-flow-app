@@ -56,7 +56,14 @@ export class CourseService {
   async findByStudent(studentId: string) {
     return prisma.enrollment.findMany({
       where: { studentId },
-      include: { course: true },
+      include: {
+        course: {
+          include: {
+            teacher: { select: { name: true, sureName: true } },
+            _count: { select: { enrollments: true } },
+          },
+        },
+      },
     });
   }
 

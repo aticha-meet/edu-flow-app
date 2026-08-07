@@ -4,14 +4,18 @@ import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { getListCourse } from '@/api/course/controller';
-import { getTestsByCourse, createTest } from '@/api/test/controller';
+import {
+  getTestsByCourse,
+  createTest,
+  deleteTest,
+} from '@/api/test/controller';
 import { CourseSidebar } from '@/components/course/CourseSidebar';
 import { CreateTestModal } from '@/components/course/test/CreateTestModal';
 import { TestList } from '@/components/course/test/TestList';
 import type { TestSummary } from '@/types/test-type';
-import styles from './test.module.scss';
-import useUserStore from '@/store/userStore';
-import { SessionType } from '@/types/session-type';
+import styles from './manage.module.scss';
+import { useRoleGuard } from '@/utils/useRoleGuard';
+import ClassPage from '../../../page';
 
 interface CourseDetail {
   id: string;
@@ -19,11 +23,16 @@ interface CourseDetail {
   className: string;
 }
 
-export default function TestPracticePage() {
+export default function TestManagePage() {
   const params = useParams();
   const router = useRouter();
-  const session = useUserStore((state) => state.session) as SessionType;
   const id = params?.id as string;
+
+  // Guard this route - only TEACHER and ADMIN allowed
+  const { session, isAllowed } = useRoleGuard(
+    ['TEACHER', 'ADMIN'],
+    `/course/${id}/test`,
+  );
 
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [tests, setTests] = useState<TestSummary[]>([]);
@@ -32,7 +41,7 @@ export default function TestPracticePage() {
 
   // ─── Fetch course & tests ─────────────────────────────────────
   const fetchData = useCallback(async () => {
-    if (!id) return;
+    if (!id || !isAllowed) return;
     setIsLoading(true);
     try {
       const [courseData, testsData] = await Promise.all([
@@ -46,7 +55,7 @@ export default function TestPracticePage() {
     } finally {
       setIsLoading(false);
     }
-  }, [id]);
+  }, [id, isAllowed]);
 
   useEffect(() => {
     fetchData();
@@ -56,7 +65,7 @@ export default function TestPracticePage() {
   const courseCode = course?.code ?? `COURSE-${id}`;
   const userId = session?.id || '';
 
-  // ─── Create test handler ──────────────────────────────────────
+  // ─── Handlers ──────────────────────────────────────
   const handleCreate = async (
     title: string,
     questions: Array<{
@@ -83,9 +92,19 @@ export default function TestPracticePage() {
     await fetchData();
   };
 
-  // Check role
-  const isTeacherOrAdmin =
-    session?.role === 'TEACHER' || session?.role === 'ADMIN';
+  const handleDelete = async (testId: string) => {
+    try {
+      await deleteTest(testId);
+      // Optimistic update
+      setTests((prev) => prev.filter((t) => t.id !== testId));
+    } catch (error) {
+      console.error('Failed to delete test:', error);
+      alert('ไม่สามารถลบแบบทดสอบได้ กรุณาลองใหม่อีกครั้ง');
+    }
+  };
+
+  // If not allowed, return null while redirecting
+  if (!isAllowed) return null;
 
   return (
     <div className={styles.page}>
@@ -101,10 +120,15 @@ export default function TestPracticePage() {
             courseId={id}
             courseCode={courseCode}
             courseName={courseName}
-            activeMenu="test"
+            activeMenu="test-manage"
             userRole={session?.role}
             onMenuChange={(menu) => {
-              if (menu !== 'test') router.push(`/course/${id}`);
+              if (menu === 'test-manage') return;
+              if (menu === 'test') {
+                router.push(`/course/${id}/test`);
+              } else {
+                router.push(`/course/${id}`);
+              }
             }}
           />
         )}
@@ -117,60 +141,46 @@ export default function TestPracticePage() {
             <span>/</span>
             <Link href={`/course/${id}`}>{isLoading ? '...' : courseName}</Link>
             <span>/</span>
-            <span>Test Practice</span>
+            <Link href={`/course/${id}/test`}>Test Practice</Link>
+            <span>/</span>
+            <span>จัดการข้อสอบ</span>
           </nav>
 
           {/* Header */}
           <header className={styles.header}>
             <div>
-              <span className={styles.eyebrow}>COURSE TESTS</span>
-              <h1>Test Practice</h1>
-              <p>แบบทดสอบทั้งหมดสำหรับรายวิชานี้ — เลือกแบบทดสอบเพื่อเริ่มทำ</p>
+              <span className={styles.eyebrow}>TEACHER ONLY</span>
+              <h1>จัดการข้อสอบ</h1>
+              <p>สร้าง แก้ไข และลบแบบทดสอบสำหรับรายวิชานี้</p>
             </div>
             <div className={styles.headerActions}>
               <div className={styles.count}>{tests.length} แบบทดสอบ</div>
-              {isTeacherOrAdmin && (
-                <button
-                  className={styles.manageButton}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '10px 20px',
-                    backgroundColor: '#fff',
-                    color: '#6366f1',
-                    border: '1px solid #6366f1',
-                    borderRadius: '8px',
-                    fontSize: '0.95rem',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                  }}
-                  type="button"
-                  onClick={() => router.push(`/course/${id}/test/manage`)}
-                  aria-label="จัดการข้อสอบ"
-                  id="manage-test-btn"
+              <button
+                className={styles.addButton}
+                type="button"
+                onClick={() => setIsCreateModalOpen(true)}
+                aria-label="สร้างแบบทดสอบใหม่"
+                id="add-test-btn"
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 >
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M12 20h9" />
-                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                  </svg>
-                  จัดการข้อสอบ
-                </button>
-              )}
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                สร้างแบบทดสอบใหม่
+              </button>
             </div>
           </header>
 
-          {/* Test List */}
+          {/* Test List with Manage Mode */}
           {isLoading ? (
             <div className={styles.loadingState}>
               {[1, 2, 3].map((i) => (
@@ -178,10 +188,24 @@ export default function TestPracticePage() {
               ))}
             </div>
           ) : (
-            <TestList tests={tests} />
+            <TestList
+              tests={tests}
+              isManageMode={true}
+              onDelete={handleDelete}
+            />
           )}
         </main>
       </div>
+
+      {/* Create Modal */}
+      {isCreateModalOpen && (
+        <CreateTestModal
+          courseId={id}
+          createdById={userId}
+          onClose={() => setIsCreateModalOpen(false)}
+          onCreate={handleCreate}
+        />
+      )}
     </div>
   );
 }

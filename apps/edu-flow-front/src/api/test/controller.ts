@@ -4,14 +4,16 @@ import type {
   TestSummary,
   TestWithQuestions,
   CreateTestPayload,
-} from '@/types/TestType';
+} from '@/types/test-type';
 
 const BASE = PAGE_PATH.API_URL;
 
 /**
  * GET /test?courseId=... — ดึงรายการ Test ของ course
  */
-export const getTestsByCourse = async (courseId: string): Promise<TestSummary[]> => {
+export const getTestsByCourse = async (
+  courseId: string,
+): Promise<TestSummary[]> => {
   const res = await axiosInstance.get(`${BASE}/test`, { params: { courseId } });
   return res.data.data;
 };
@@ -19,7 +21,9 @@ export const getTestsByCourse = async (courseId: string): Promise<TestSummary[]>
 /**
  * GET /test/:id — ดึง Test พร้อม Questions + Choices
  */
-export const getTestById = async (testId: string): Promise<TestWithQuestions> => {
+export const getTestById = async (
+  testId: string,
+): Promise<TestWithQuestions> => {
   const res = await axiosInstance.get(`${BASE}/test/${testId}`);
   return res.data.data;
 };
@@ -27,7 +31,9 @@ export const getTestById = async (testId: string): Promise<TestWithQuestions> =>
 /**
  * POST /test — สร้าง Test ใหม่พร้อม Questions
  */
-export const createTest = async (payload: CreateTestPayload): Promise<TestSummary> => {
+export const createTest = async (
+  payload: CreateTestPayload,
+): Promise<TestSummary> => {
   const res = await axiosInstance.post(`${BASE}/test`, payload);
   return res.data.data;
 };

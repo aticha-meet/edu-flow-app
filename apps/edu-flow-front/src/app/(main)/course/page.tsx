@@ -6,6 +6,8 @@ import useUserStore from '@/store/userStore';
 import { useSession } from 'next-auth/react';
 import { CreateClassPopup } from '@/components/course/CreateClassPopup';
 import { useRouter } from 'next/navigation';
+import { useRoleGuard } from '@/utils/useRoleGuard';
+import { SessionType } from '@/types/session-type';
 
 // ─── Types ───────────────────────────────────────────────────────
 interface ClassItem {
@@ -49,12 +51,16 @@ const STATUS_LABEL: Record<ClassItem['status'], string> = {
 
 export default function ClassPage() {
   const router = useRouter();
-  const session = useSession();
+  // const session = useSession();
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [filter, setFilter] = useState<'all' | ClassItem['status']>('all');
   const getUserFromStore = useUserStore((state: any) => state.getUserFromStore);
-  const sessionFromStore = useUserStore((state: any) => state.session);
+  const {
+    session,
+  }: {
+    session: SessionType;
+  } = useRoleGuard(['TEACHER', 'ADMIN'], '/course');
 
   // ─── Create Class Modal State ─────────────────────────────────
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -107,8 +113,8 @@ export default function ClassPage() {
   }, [session.data?.user?.email, session]);
 
   useEffect(() => {
-    if (sessionFromStore?.id) fetchClasses();
-  }, [sessionFromStore?.id]);
+    if (sessionFromStore?.id && classes.length === 0) fetchClasses();
+  }, [sessionFromStore?.id, classes]);
 
   // ─── Create Class Handlers ────────────────────────────────────
   const handleOpenModal = () => {
