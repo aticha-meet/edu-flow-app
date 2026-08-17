@@ -15,7 +15,6 @@ import { TestList } from '@/components/course/test/TestList';
 import type { TestSummary } from '@/types/test-type';
 import styles from './manage.module.scss';
 import { useRoleGuard } from '@/utils/useRoleGuard';
-import ClassPage from '../../../page';
 
 interface CourseDetail {
   id: string;

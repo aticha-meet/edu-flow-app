@@ -12,6 +12,7 @@ export const handleRefreshToken = async (
     const acToken = req.cookies?.ac_tk;
     const refreshTokenHeader = req.headers.authorization;
     console.log("Access Token : ", acToken);
+    console.log("Refresh Token : ", refreshTokenHeader);
 
     // ==========================================
     // 1. ด่านแรก: ลองเช็ค Access Token ก่อน

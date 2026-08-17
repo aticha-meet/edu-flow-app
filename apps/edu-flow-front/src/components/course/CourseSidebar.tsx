@@ -3,7 +3,7 @@
 import styles from './course-components.module.scss';
 import { useRouter } from 'next/navigation';
 
-export type MenuKey = 'assignment' | 'syllabus' | 'test' | 'test-manage';
+export type MenuKey = 'assignment' | 'syllabus' | 'test' | 'test-manage' | 'manage-students';
 
 interface MenuItem {
   key: MenuKey;
@@ -88,6 +88,23 @@ const MenuIcon = ({ name }: { name: string }) => {
         <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
       </svg>
     ),
+    'manage-students': (
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    ),
   };
   return <>{icons[name]}</>;
 };
@@ -120,6 +137,12 @@ export const CourseSidebar = ({
       key: 'test-manage',
       label: 'Manage Tests',
       icon: <MenuIcon name="test-manage" />,
+      hide: userRole === 'STUDENT',
+    },
+    {
+      key: 'manage-students',
+      label: 'Manage Students',
+      icon: <MenuIcon name="manage-students" />,
       hide: userRole === 'STUDENT',
     },
   ];
@@ -157,6 +180,10 @@ export const CourseSidebar = ({
                   }
                   if (item.key === 'test-manage') {
                     router.push(`/course/${courseId}/test/manage`);
+                    return;
+                  }
+                  if (item.key === 'manage-students') {
+                    router.push(`/course/${courseId}/students`);
                     return;
                   }
                   onMenuChange(item.key);

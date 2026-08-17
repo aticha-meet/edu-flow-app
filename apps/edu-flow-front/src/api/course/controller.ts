@@ -34,3 +34,28 @@ export const createCourse = async (data: {
     throw err;
   }
 };
+
+export const getEnrollments = async (courseId: string) => {
+  try {
+    const request = await axiosInstance.get(
+      `${PAGE_PATH.API_URL}/course/${courseId}/students`,
+    );
+    return request.data.data;
+  } catch (err) {
+    console.log(err);
+    throw err;
+  }
+};
+
+export const addEnrollment = async (courseId: string, studentId: string) => {
+  try {
+    const request = await axiosInstance.post(
+      `${PAGE_PATH.API_URL}/course/${courseId}/students`,
+      { studentId },
+    );
+    return request.data.data;
+  } catch (err) {
+    console.log(err);
+    throw err;
+  }
+};

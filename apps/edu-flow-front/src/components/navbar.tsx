@@ -5,6 +5,7 @@ import style from './navbar.module.scss';
 import Link from 'next/link';
 import { CreateProfilePopup } from '@/components/profile/CreateProfilePopup';
 import { usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 const navItems = [
   { href: '/course', label: 'Course' },
@@ -16,7 +17,13 @@ const navItems = [
 
 export const Navbar = () => {
   const pathname = usePathname();
+  const { data: session } = useSession();
   const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
+
+  const userRole = (session?.user as any)?.role as string | undefined;
+  // ADMIN can create both teacher & student; TEACHER can only create student
+  const allowedRoles: ('teacher' | 'student')[] | undefined =
+    userRole === 'TEACHER' ? ['student'] : undefined;
 
   return (
     <>
@@ -121,6 +128,7 @@ export const Navbar = () => {
       <CreateProfilePopup
         isOpen={isProfilePopupOpen}
         onClose={() => setIsProfilePopupOpen(false)}
+        allowedRoles={allowedRoles}
       />
     </>
   );

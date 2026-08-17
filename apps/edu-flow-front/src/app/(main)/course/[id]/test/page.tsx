@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { getListCourse } from '@/api/course/controller';
-import { getTestsByCourse, createTest } from '@/api/test/controller';
+import { getTestsByCourse } from '@/api/test/controller';
 import { CourseSidebar } from '@/components/course/CourseSidebar';
 import { TestList } from '@/components/course/test/TestList';
 import type { TestSummary } from '@/types/test-type';
@@ -28,7 +28,7 @@ export default function TestPracticePage() {
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [tests, setTests] = useState<TestSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  // const [setIsCreateModalOpen] = useState(false);
 
   // ─── Fetch course & tests ─────────────────────────────────────
   const fetchData = useCallback(async () => {
@@ -54,34 +54,34 @@ export default function TestPracticePage() {
 
   const courseName = course?.className ?? 'รายวิชา';
   const courseCode = course?.code ?? `COURSE-${id}`;
-  const userId = user?.id || '';
+  // const userId = user?.id || '';
 
   // ─── Create test handler ──────────────────────────────────────
-  const handleCreate = async (
-    title: string,
-    questions: Array<{
-      questionText: string;
-      choices: Array<{ value: string; isCorrect: boolean }>;
-    }>,
-  ) => {
-    await createTest({
-      title,
-      courseId: id,
-      createdById: userId,
-      questions: questions.map((q, qi) => ({
-        questionText: q.questionText,
-        order: qi,
-        choices: q.choices.map((c, ci) => ({
-          value: c.value,
-          isCorrect: c.isCorrect,
-          order: ci,
-        })),
-      })),
-    });
-    setIsCreateModalOpen(false);
-    // Refresh list
-    await fetchData();
-  };
+  // const handleCreate = async (
+  //   title: string,
+  //   questions: Array<{
+  //     questionText: string;
+  //     choices: Array<{ value: string; isCorrect: boolean }>;
+  //   }>,
+  // ) => {
+  //   await createTest({
+  //     title,
+  //     courseId: id,
+  //     createdById: userId,
+  //     questions: questions.map((q, qi) => ({
+  //       questionText: q.questionText,
+  //       order: qi,
+  //       choices: q.choices.map((c, ci) => ({
+  //         value: c.value,
+  //         isCorrect: c.isCorrect,
+  //         order: ci,
+  //       })),
+  //     })),
+  //   });
+  //   // setIsCreateModalOpen(false);
+  //   // Refresh list
+  //   await fetchData();
+  // };
 
   // Check role
   const isTeacherOrAdmin = user?.role === 'TEACHER' || user?.role === 'ADMIN';

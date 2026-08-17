@@ -97,6 +97,34 @@ export class CourseService {
       },
     });
   }
+  /**
+   * ดึงรายชื่อนักเรียนใน course
+   */
+  async getEnrollments(courseId: string) {
+    return prisma.enrollment.findMany({
+      where: { courseId },
+      include: {
+        student: {
+          select: { id: true, name: true, sureName: true, email: true },
+        },
+      },
+      orderBy: { enrolledAt: 'asc' },
+    });
+  }
+
+  /**
+   * เพิ่มนักเรียนเข้า course
+   */
+  async addEnrollment(courseId: string, studentId: string) {
+    return prisma.enrollment.create({
+      data: { courseId, studentId },
+      include: {
+        student: {
+          select: { id: true, name: true, sureName: true, email: true },
+        },
+      },
+    });
+  }
 }
 
 export const courseService = new CourseService();

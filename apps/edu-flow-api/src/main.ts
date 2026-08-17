@@ -12,10 +12,19 @@ dotenv.config();
 const app = express();
 const PORT = PATH_ENV.PORT;
 
+const allowURL = [
+  'http://localhost:3000',
+  'https://app.edflow.online',
+];
+
 // CORS ต้องระบุ origin ตรงๆ และเปิด credentials เพื่อให้ browser ส่ง cookie ได้
 app.use(
   cors({
-    origin: PATH_ENV.FRONT_URL || 'http://localhost:3000',
+    origin:
+      function (origin, callback) {
+        if (!origin || allowURL.includes(origin)) return callback(null, true);
+        return callback(new Error('Not allowed by CORS'));
+      },
     credentials: true, // สำคัญ: ต้องเปิดเพื่อรับ cookie จาก browser
   }),
 );

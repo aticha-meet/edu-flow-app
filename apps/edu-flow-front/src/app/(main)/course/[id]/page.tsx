@@ -10,10 +10,11 @@ import {
 } from '@/components/course/CourseAssignment';
 import { CourseSyllabus } from '@/components/course/CourseSyllabus';
 import { getListCourse } from '@/api/course/controller';
+import { useRoleGuard } from '@/utils/useRoleGuard';
 import styles from './course-detail.module.scss';
 
 // ─── Types ────────────────────────────────────────────────────
-type MenuKey = 'assignment' | 'syllabus';
+type MenuKey = 'assignment' | 'syllabus' | 'test-manage' | 'manage-students';
 
 interface CourseDetail {
   id: number;
@@ -117,6 +118,13 @@ const PanelHeader = ({ iconPath, title, subtitle }: PanelHeaderProps) => (
 export default function CourseDetailPage() {
   const params = useParams();
   const id = params?.id as string;
+
+  const { session } = useRoleGuard(['TEACHER', 'ADMIN', 'STUDENT'], '/login');
+  const userRole = (session?.user as any)?.role as
+    | 'TEACHER'
+    | 'ADMIN'
+    | 'STUDENT'
+    | undefined;
 
   const [activeMenu, setActiveMenu] = useState<MenuKey>('assignment');
   const [course, setCourse] = useState<CourseDetail | null>(null);
@@ -252,6 +260,7 @@ export default function CourseDetailPage() {
             courseCode={courseCode}
             courseName={courseName}
             activeMenu={activeMenu}
+            userRole={userRole}
             onMenuChange={(menu) => {
               if (menu !== 'test') setActiveMenu(menu);
             }}

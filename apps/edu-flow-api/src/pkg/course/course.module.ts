@@ -12,3 +12,9 @@ CourseRouter.post('/course', (req, res) =>
 CourseRouter.get('/course/:id', (req, res) =>
   courseController.getCourseById(req, res),
 );
+CourseRouter.get('/course/:id/students', (req, res) =>
+  courseController.getEnrollments(req, res),
+);
+CourseRouter.post('/course/:id/students', (req, res) =>
+  courseController.addEnrollment(req, res),
+);

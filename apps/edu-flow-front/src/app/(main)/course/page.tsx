@@ -49,10 +49,7 @@ const STATUS_LABEL: Record<ClassItem['status'], string> = {
 export default function ClassPage() {
   const router = useRouter();
 
-  const { session, status, isAllowed } = useRoleGuard(
-    ['TEACHER', 'ADMIN', 'STUDENT'],
-    '/login',
-  );
+  const { session } = useRoleGuard(['TEACHER', 'ADMIN', 'STUDENT'], '/login');
   // Note: we can allow everyone on the main course list, so maybe just use useSession?
   // Let's use useRoleGuard with all roles to ensure login.
 
@@ -75,9 +72,9 @@ export default function ClassPage() {
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
 
-  // ─── Check if user is ADMIN ───────────────────────────────────
+  // ─── Check if user can create course (ADMIN or TEACHER) ────────
   const user = session?.user as any;
-  const isAdmin = user?.role === 'ADMIN';
+  const canCreateCourse = user?.role === 'ADMIN' || user?.role === 'TEACHER';
 
   const fetchClasses = async () => {
     if (!user?.id) return;
@@ -100,10 +97,10 @@ export default function ClassPage() {
   };
 
   useEffect(() => {
-    if (user?.id && classes.length === 0) {
+    if (user?.id) {
       fetchClasses();
     }
-  }, [user?.id, classes]);
+  }, [user?.id]);
 
   // ─── Create Class Handlers ────────────────────────────────────
   const handleOpenModal = () => {
@@ -137,7 +134,7 @@ export default function ClassPage() {
               จัดการและดูรายละเอียดรายวิชาทั้งหมด
             </p>
           </div>
-          {isAdmin && (
+          {canCreateCourse && (
             <button
               className={styles.addBtn}
               id="add-class-btn"

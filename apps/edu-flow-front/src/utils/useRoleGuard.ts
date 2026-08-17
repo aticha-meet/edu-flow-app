@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { SessionType } from '@/types/session-type';
 
 export const useRoleGuard = (
   allowedRoles: string[],

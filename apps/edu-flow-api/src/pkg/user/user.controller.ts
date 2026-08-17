@@ -55,7 +55,15 @@ export class UserController {
           email: userData.email,
         },
         secret,
-        { expiresIn: '10m' },
+        { expiresIn: '7D' },
+      );
+
+      const accessToken = jwt.sign(
+        {
+          id: userData.id,
+        },
+        secret,
+        { expiresIn: '5m' },
       );
 
       const cookieOptions = {
@@ -63,11 +71,11 @@ export class UserController {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax' as const,
         path: '/',
-        maxAge: 10 * 60 * 1000, // ⚠️ Express ใช้หน่วย "มิลลิวินาที" (10 นาที * 60 วิ * 1000)
+        maxAge: 5 * 60 * 1000, // ⚠️ Express ใช้หน่วย "มิลลิวินาที" (10 นาที * 60 วิ * 1000)
       };
 
       res.cookie('role', userData.role, cookieOptions);
-      res.cookie('ac_tk', backendToken, cookieOptions);
+      res.cookie('ac_tk', accessToken, cookieOptions);
 
       return res.status(200).json({
         message: 'Sync successfully',

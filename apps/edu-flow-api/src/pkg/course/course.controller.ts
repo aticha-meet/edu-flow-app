@@ -78,11 +78,11 @@ export class CourseController {
         maxStudents,
       } = req.body;
 
-      // ตรวจสอบสิทธิ์: เฉพาะ ADMIN เท่านั้นที่สร้าง Class ได้
-      if (role !== 'ADMIN') {
+      // ตรวจสอบสิทธิ์: ADMIN หรือ TEACHER เท่านั้นที่สร้าง Class ได้
+      if (role !== 'ADMIN' && role !== 'TEACHER') {
         return res
           .status(403)
-          .json({ message: 'Access denied: Only ADMIN can create classes' });
+          .json({ message: 'Access denied: Only ADMIN or TEACHER can create classes' });
       }
 
       // Validate required fields
@@ -121,6 +121,40 @@ export class CourseController {
       return res
         .status(500)
         .json({ message: 'Internal Server Error', error: err });
+    }
+  }
+  async getEnrollments(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const enrollments = await courseService.getEnrollments(id);
+      return res.status(200).json({
+        message: 'Enrollments fetched successfully',
+        data: enrollments,
+      });
+    } catch (err) {
+      console.log(err);
+      return res.status(500).json({ message: 'Internal Server Error', error: err });
+    }
+  }
+
+  async addEnrollment(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { studentId } = req.body;
+      if (!studentId) {
+        return res.status(400).json({ message: 'studentId is required' });
+      }
+      const enrollment = await courseService.addEnrollment(id, studentId);
+      return res.status(201).json({
+        message: 'Student enrolled successfully',
+        data: enrollment,
+      });
+    } catch (err: any) {
+      if (err?.code === 'P2002') {
+        return res.status(409).json({ message: 'Student is already enrolled in this course' });
+      }
+      console.log(err);
+      return res.status(500).json({ message: 'Internal Server Error', error: err });
     }
   }
 }

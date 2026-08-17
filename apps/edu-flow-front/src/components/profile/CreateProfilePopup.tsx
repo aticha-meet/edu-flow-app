@@ -13,13 +13,17 @@ type ProfileRole = 'teacher' | 'student';
 interface CreateProfilePopupProps {
   isOpen: boolean;
   onClose: () => void;
+  allowedRoles?: ProfileRole[];
 }
 
 export const CreateProfilePopup = ({
   isOpen,
   onClose,
+  allowedRoles,
 }: CreateProfilePopupProps) => {
-  const [role, setRole] = useState<ProfileRole>('teacher');
+  const defaultRole: ProfileRole =
+    allowedRoles && allowedRoles.length === 1 ? allowedRoles[0] : 'teacher';
+  const [role, setRole] = useState<ProfileRole>(defaultRole);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
@@ -84,6 +88,7 @@ export const CreateProfilePopup = ({
   };
 
   const handleRoleSwitch = (newRole: ProfileRole) => {
+    if (allowedRoles && !allowedRoles.includes(newRole)) return;
     setRole(newRole);
     setHasLoadedUsers(false);
     setFormError('');
@@ -232,52 +237,56 @@ export const CreateProfilePopup = ({
         </div>
 
         <div className={styles.roleTabs}>
-          <button
-            type="button"
-            className={
-              role === 'teacher' ? styles.roleTabActive : styles.roleTab
-            }
-            data-role="teacher"
-            onClick={() => handleRoleSwitch('teacher')}
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          {(!allowedRoles || allowedRoles.includes('teacher')) && (
+            <button
+              type="button"
+              className={
+                role === 'teacher' ? styles.roleTabActive : styles.roleTab
+              }
+              data-role="teacher"
+              onClick={() => handleRoleSwitch('teacher')}
             >
-              <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-              <path d="M6 12v5c3 3 9 3 12 0v-5" />
-            </svg>
-            ครู
-          </button>
-          <button
-            type="button"
-            className={
-              role === 'student' ? styles.roleTabActive : styles.roleTab
-            }
-            data-role="student"
-            onClick={() => handleRoleSwitch('student')}
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                <path d="M6 12v5c3 3 9 3 12 0v-5" />
+              </svg>
+              ครู
+            </button>
+          )}
+          {(!allowedRoles || allowedRoles.includes('student')) && (
+            <button
+              type="button"
+              className={
+                role === 'student' ? styles.roleTabActive : styles.roleTab
+              }
+              data-role="student"
+              onClick={() => handleRoleSwitch('student')}
             >
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-            นักเรียน
-          </button>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              นักเรียน
+            </button>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className={styles.modalForm}>
