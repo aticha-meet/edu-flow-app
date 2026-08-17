@@ -23,7 +23,7 @@ export const Navbar = () => {
       <nav className={style.navbar}>
         <div className={style.navbarInner}>
           {/* Logo */}
-          <div className={style.logo}>
+          <Link href="/" className={style.logo}>
             <div className={style.logoIcon}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <path
@@ -50,7 +50,7 @@ export const Navbar = () => {
               </svg>
             </div>
             <span className={style.logoText}>EduFlow</span>
-          </div>
+          </Link>
 
           {/* Navigation Links — Centered */}
           <ul className={style.navLinks}>

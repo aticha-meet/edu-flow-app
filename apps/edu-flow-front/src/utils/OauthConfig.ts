@@ -45,11 +45,11 @@ export const authOptions = {
         // Sync with our backend to get role and custom backendToken
         try {
           const apiUrl =
-            process.env.NEXT_PUBLIC_ENDPOINT_URL || 'http://localhost:3333/api';
+            process.env.NEXT_PUBLIC_LOCAL_ENDPOINT_URL || 'http://localhost:3333/api';
           // The Express routes usually have a prefix or no prefix. Looking at axiosConfig, the baseURL is NEXT_PUBLIC_ENDPOINT_URL
           // Let's use that.
           const res = await fetch(
-            `${process.env.NEXT_PUBLIC_ENDPOINT_URL}/auth/google-sync`,
+            `${process.env.NEXT_PUBLIC_LOCAL_ENDPOINT_URL}/auth/google-sync`,
             {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },

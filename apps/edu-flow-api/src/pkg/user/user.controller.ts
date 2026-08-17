@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import { userService } from './user.service';
+import { TOKEN } from '../../configs/callToken';
+import { CLIENT_RENEG_LIMIT } from 'tls';
 
 export class UserController {
   async getListUsers(req: Request, res: Response) {
@@ -45,9 +47,7 @@ export class UserController {
       // Generate Backend JWT Token
       const jwt = require('jsonwebtoken');
       const secret =
-        process.env.JWT_SECRET ||
-        process.env.NEXTAUTH_SECRET ||
-        'fallback-secret-key';
+        TOKEN.JWT;
       const backendToken = jwt.sign(
         {
           id: userData.id,
@@ -55,14 +55,26 @@ export class UserController {
           email: userData.email,
         },
         secret,
-        { expiresIn: '7d' },
+        { expiresIn: '10m' },
       );
+
+      const cookieOptions = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax' as const,
+        path: '/',
+        maxAge: 10 * 60 * 1000, // ⚠️ Express ใช้หน่วย "มิลลิวินาที" (10 นาที * 60 วิ * 1000)
+      };
+
+      res.cookie('role', userData.role, cookieOptions);
+      res.cookie('ac_tk', backendToken, cookieOptions);
 
       return res.status(200).json({
         message: 'Sync successfully',
         data: {
           id: userData.id,
           role: userData.role,
+          email: userData.email,
           backendToken,
         },
       });

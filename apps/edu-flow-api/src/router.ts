@@ -13,6 +13,7 @@ const AppRouter: Router = Router();
 AppRouter.post('/auth/google-sync', (req, res) =>
   userController.googleSync(req, res),
 );
+
 AppRouter.use(handleRefreshToken, UserRouter);
 
 // Student routes

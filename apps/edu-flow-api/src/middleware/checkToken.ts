@@ -1,5 +1,4 @@
 import jwt from 'jsonwebtoken';
-import { handleGoogleTokens } from '../utils/verifyGgToken';
 import { NextFunction, Request, Response } from 'express';
 import { TOKEN } from '../configs/callToken';
 import prisma from '../configs/prisma';
@@ -12,6 +11,7 @@ export const handleRefreshToken = async (
   try {
     const acToken = req.cookies?.ac_tk;
     const refreshTokenHeader = req.headers.authorization;
+    console.log("Access Token : ", acToken);
 
     // ==========================================
     // 1. ด่านแรก: ลองเช็ค Access Token ก่อน
@@ -50,14 +50,11 @@ export const handleRefreshToken = async (
 
     const token = refreshTokenHeader.split(' ')[1];
 
-    // ⚠️ หมายเหตุ: ต้องมั่นใจว่า handleGoogleTokens() คืนค่ากลับมาเป็น Object นะครับ
-    // ไม่ใช่เผลอไปสั่ง res.send() หรือ res.json() ซ้อนข้างในนั้น
-    const googleUser = (await handleGoogleTokens(res, token)) as {
-      email: string;
-    };
+    // ✅ Verify Refresh Token ด้วย JWT ที่เราออกเอง
+    const payload = jwt.verify(token, TOKEN.JWT as string) as { id: string };
 
     const userData = await prisma.user.findUnique({
-      where: { email: googleUser.email },
+      where: { id: payload.id },
       select: { id: true, role: true },
     });
 
