@@ -59,10 +59,11 @@ export class TestController {
    */
   async createTest(req: Request, res: Response) {
     try {
-      const { title, courseId, createdById, questions } = req.body as {
+      const { title, courseId, createdById, durationMinutes, questions } = req.body as {
         title: string;
         courseId: string;
         createdById: string;
+        durationMinutes?: number;
         questions: Array<{
           questionText: string;
           order: number;
@@ -102,10 +103,19 @@ export class TestController {
         }
       }
 
+      // Validate durationMinutes
+      const duration = durationMinutes !== undefined ? Number(durationMinutes) : 45;
+      if (isNaN(duration) || duration < 1 || duration > 300) {
+        return res.status(400).json({
+          message: 'durationMinutes must be between 1 and 300',
+        });
+      }
+
       const test = await testService.create({
         title,
         courseId,
         createdById,
+        durationMinutes: duration,
         questions,
       });
 

@@ -72,11 +72,13 @@ export default function TestManagePage() {
       questionText: string;
       choices: Array<{ value: string; isCorrect: boolean }>;
     }>,
+    durationMinutes: number,
   ) => {
     await createTest({
       title,
       courseId: id,
       createdById: userId,
+      durationMinutes,
       questions: questions.map((q, qi) => ({
         questionText: q.questionText,
         order: qi,

@@ -92,7 +92,8 @@ model Test {
   createdById String
   createdBy   User   @relation("createdTests", fields: [createdById], references: [id])
 
-  createdAt DateTime @default(now())
+  durationMinutes Int      @default(45) // ระยะเวลาสอบ (นาที) กำหนดโดยครู/admin
+  createdAt       DateTime @default(now())
 
   questions Question[]
   attempts  Attempt[]

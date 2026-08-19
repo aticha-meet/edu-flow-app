@@ -43,6 +43,7 @@ export class TestService {
     title: string;
     courseId: string;
     createdById: string;
+    durationMinutes?: number;
     questions: Array<{
       questionText: string;
       order: number;
@@ -58,6 +59,7 @@ export class TestService {
         title: data.title,
         courseId: data.courseId,
         createdById: data.createdById,
+        durationMinutes: data.durationMinutes,
         questions: {
           create: data.questions.map((q) => ({
             questionText: q.questionText,

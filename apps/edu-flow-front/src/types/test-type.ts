@@ -3,6 +3,7 @@ export interface TestSummary {
   id: string;
   title: string;
   courseId: string;
+  durationMinutes: number;
   createdAt: string;
   createdBy: {
     id: string;
@@ -34,6 +35,7 @@ export interface TestWithQuestions {
   id: string;
   title: string;
   courseId: string;
+  durationMinutes: number;
   createdAt: string;
   course: {
     id: string;
@@ -53,6 +55,7 @@ export interface CreateTestPayload {
   title: string;
   courseId: string;
   createdById: string;
+  durationMinutes?: number;
   questions: Array<{
     questionText: string;
     order: number;

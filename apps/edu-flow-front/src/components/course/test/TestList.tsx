@@ -47,6 +47,10 @@ export const TestList = ({
               </span>
               <span className={styles.metaDivider}>·</span>
               <span className={styles.metaItem}>
+                ⏱ {test.durationMinutes} นาที
+              </span>
+              <span className={styles.metaDivider}>·</span>
+              <span className={styles.metaItem}>
                 สร้างเมื่อ {formatDate(test.createdAt)}
               </span>
               <span className={styles.metaDivider}>·</span>

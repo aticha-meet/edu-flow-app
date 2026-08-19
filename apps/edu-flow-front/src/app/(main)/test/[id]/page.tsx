@@ -196,7 +196,8 @@ export default function TestExamPage() {
     try {
       const data = await getTestById(testId);
       setTest(data);
-      setTimeLeft(data.questions.length * SECS_PER_QUESTION);
+      // ใช้ durationMinutes จาก test (กำหนดโดยครู/admin) แปลงเป็นวินาที
+      setTimeLeft(data.durationMinutes * 60);
     } catch {
       setFetchError('ไม่สามารถโหลดแบบทดสอบได้ กรุณาลองใหม่อีกครั้ง');
     } finally {

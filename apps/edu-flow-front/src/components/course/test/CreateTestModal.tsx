@@ -18,7 +18,7 @@ interface CreateTestModalProps {
   courseId: string;
   createdById: string;
   onClose: () => void;
-  onCreate: (title: string, questions: QuestionInput[]) => Promise<void>;
+  onCreate: (title: string, questions: QuestionInput[], durationMinutes: number) => Promise<void>;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────
@@ -71,6 +71,7 @@ export const CreateTestModal = ({
   onCreate,
 }: CreateTestModalProps) => {
   const [title, setTitle] = useState('');
+  const [durationMinutes, setDurationMinutes] = useState(45);
   const [questions, setQuestions] = useState<QuestionInput[]>([
     emptyQuestion(),
   ]);
@@ -223,7 +224,7 @@ export const CreateTestModal = ({
 
     setIsSubmitting(true);
     try {
-      await onCreate(title.trim(), questions);
+      await onCreate(title.trim(), questions, durationMinutes);
     } catch {
       setError('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
     } finally {
@@ -310,6 +311,29 @@ export const CreateTestModal = ({
               autoFocus
               required
             />
+          </div>
+
+          {/* ระยะเวลาสอบ */}
+          <div className={styles.fieldGroup}>
+            <label className={styles.label} htmlFor="test-duration">
+              ระยะเวลาสอบ (นาที)
+            </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <input
+                id="test-duration"
+                type="number"
+                className={styles.input}
+                value={durationMinutes}
+                min={1}
+                max={300}
+                onChange={(e) => setDurationMinutes(Math.max(1, Math.min(300, Number(e.target.value) || 45)))}
+                style={{ maxWidth: '120px' }}
+                required
+              />
+              <span style={{ fontSize: '0.82rem', color: '#64748b' }}>
+                ⏱ {durationMinutes} นาที &nbsp;/&nbsp; {Math.floor(durationMinutes / 60) > 0 ? `${Math.floor(durationMinutes / 60)} ชม. ` : ''}{durationMinutes % 60 > 0 ? `${durationMinutes % 60} นาที` : ''}
+              </span>
+            </div>
           </div>
 
           {/* Questions */}
