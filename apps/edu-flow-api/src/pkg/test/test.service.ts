@@ -199,6 +199,106 @@ export class TestService {
       }),
     ]);
   }
+
+  /**
+   * Dashboard คะแนนสำหรับครู — ดึงคะแนนนักเรียนทุกคนใน course ของ test นั้น
+   */
+  async getScoreDashboard(testId: string) {
+    // 1. ดึง test info + จำนวนข้อ
+    const test = await prisma.test.findUnique({
+      where: { id: testId },
+      select: {
+        id: true,
+        title: true,
+        durationMinutes: true,
+        courseId: true,
+        _count: { select: { questions: true } },
+      },
+    });
+
+    if (!test) throw new Error('TEST_NOT_FOUND');
+
+    const totalQuestions = test._count.questions;
+
+    // 2. ดึงนักเรียนทุกคนที่ enroll ใน course นี้
+    const enrollments = await prisma.enrollment.findMany({
+      where: { courseId: test.courseId },
+      include: {
+        student: {
+          select: {
+            id: true,
+            name: true,
+            sureName: true,
+            studentProfile: { select: { studentId: true } },
+          },
+        },
+      },
+      orderBy: { enrolledAt: 'asc' },
+    });
+
+    // 3. ดึง attempts ที่ submitted แล้วของ test นี้ทั้งหมด
+    const attempts = await prisma.attempt.findMany({
+      where: { testId, submittedAt: { not: null } },
+      select: {
+        id: true,
+        studentId: true,
+        attemptNumber: true,
+        score: true,
+        submittedAt: true,
+        submittedByCheat: true,
+      },
+      orderBy: { attemptNumber: 'asc' },
+    });
+
+    // 4. Group attempts by studentId
+    const attemptsByStudent = new Map<string, typeof attempts>();
+    for (const a of attempts) {
+      if (!attemptsByStudent.has(a.studentId)) {
+        attemptsByStudent.set(a.studentId, []);
+      }
+      attemptsByStudent.get(a.studentId)!.push(a);
+    }
+
+    // 5. Build response
+    const students = enrollments.map((e) => {
+      const studentAttempts = attemptsByStudent.get(e.student.id) ?? [];
+      const scores = studentAttempts
+        .map((a) => a.score)
+        .filter((s): s is number => s !== null);
+      const bestScore = scores.length > 0 ? Math.max(...scores) : null;
+      const percentage =
+        bestScore !== null && totalQuestions > 0
+          ? Math.round((bestScore / totalQuestions) * 100)
+          : null;
+
+      return {
+        id: e.student.id,
+        name: e.student.name,
+        sureName: e.student.sureName,
+        studentId: e.student.studentProfile?.studentId ?? null,
+        attempts: studentAttempts.map((a) => ({
+          id: a.id,
+          attemptNumber: a.attemptNumber,
+          score: a.score,
+          submittedAt: a.submittedAt,
+          submittedByCheat: a.submittedByCheat,
+          totalQuestions,
+        })),
+        bestScore,
+        percentage,
+      };
+    });
+
+    return {
+      test: {
+        id: test.id,
+        title: test.title,
+        totalQuestions,
+        durationMinutes: test.durationMinutes,
+      },
+      students,
+    };
+  }
 }
 
 export const testService = new TestService();

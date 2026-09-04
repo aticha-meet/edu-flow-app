@@ -1,0 +1,502 @@
+/* ─────────────────────────────────────────────────────────────
+   Dashboard Layout
+───────────────────────────────────────────────────────────── */
+.page {
+    min-height: 100vh;
+    background: #0b0f1a;
+    color: #f1f5f9;
+}
+
+.layout {
+    display: flex;
+    min-height: calc(100vh - 64px);
+}
+
+.sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: rgba(10, 14, 26, 0.95);
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.content {
+    flex: 1;
+    min-width: 0;
+    padding: 32px 36px 60px;
+    max-width: 1200px;
+}
+
+/* ─── Breadcrumb ─── */
+.breadcrumb {
+    display: flex;
+    gap: 8px;
+    color: #475569;
+    font-size: 0.8rem;
+    margin-bottom: 28px;
+}
+.breadcrumb a {
+    color: #64748b;
+    text-decoration: none;
+}
+.breadcrumb a:hover {
+    color: #a5b4fc;
+}
+
+/* ─── Page Header ─── */
+.header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    padding-bottom: 24px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.eyebrow {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #6366f1;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+.header h1 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #f1f5f9;
+    margin: 0 0 6px;
+    letter-spacing: -0.02em;
+}
+
+.header p {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin: 0;
+}
+
+/* ─── Loading ─── */
+.loadingState {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.skeletonCard {
+    height: 88px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.6; }
+    50%       { opacity: 1; }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Test List Dashboard (หน้าแรก)
+───────────────────────────────────────────────────────────── */
+.testGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.testCard {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 20px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+    cursor: pointer;
+}
+
+.testCard:hover {
+    background: rgba(99, 102, 241, 0.06);
+    border-color: rgba(99, 102, 241, 0.2);
+    transform: translateX(3px);
+}
+
+.testCardIcon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.15));
+    border: 1px solid rgba(99,102,241,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #818cf8;
+    flex-shrink: 0;
+}
+
+.testCardInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.testCardTitle {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin: 0 0 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.testCardMeta {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.metaChip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.metaChip svg {
+    color: #475569;
+    flex-shrink: 0;
+}
+
+.testCardStats {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-shrink: 0;
+}
+
+.statItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 56px;
+}
+
+.statValue {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #a5b4fc;
+    line-height: 1;
+}
+
+.statLabel {
+    font-size: 0.68rem;
+    color: #475569;
+    font-weight: 500;
+    text-align: center;
+}
+
+.statDivider {
+    width: 1px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.testCardArrow {
+    color: #334155;
+    flex-shrink: 0;
+    transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.testCard:hover .testCardArrow {
+    color: #6366f1;
+    transform: translateX(3px);
+}
+
+/* Empty */
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 64px 20px;
+    color: #334155;
+    text-align: center;
+}
+.emptyState svg { opacity: 0.3; }
+.emptyState p { font-size: 0.875rem; color: #475569; margin: 0; }
+
+/* ─────────────────────────────────────────────────────────────
+   Score Detail Dashboard (หน้าที่สอง)
+───────────────────────────────────────────────────────────── */
+
+/* Back button */
+.backBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #94a3b8;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    text-decoration: none;
+}
+.backBtn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #cbd5e1;
+}
+
+/* Summary Stats Bar */
+.summaryBar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+}
+
+.summaryCard {
+    padding: 16px 18px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.summaryValue {
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.summaryLabel {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.summaryValue[data-color="purple"] { color: #a5b4fc; }
+.summaryValue[data-color="green"]  { color: #6ee7b7; }
+.summaryValue[data-color="red"]    { color: #fca5a5; }
+.summaryValue[data-color="yellow"] { color: #fcd34d; }
+
+/* Table */
+.tableWrapper {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.table thead {
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.table th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+}
+
+.table th.sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s;
+}
+.table th.sortable:hover { color: #94a3b8; }
+
+.table tbody tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    transition: background 0.12s ease;
+}
+.table tbody tr:last-child { border-bottom: none; }
+.table tbody tr:hover { background: rgba(255, 255, 255, 0.025); }
+
+.table td {
+    padding: 13px 16px;
+    color: #cbd5e1;
+    vertical-align: middle;
+}
+
+/* Name cell */
+.studentName {
+    font-weight: 600;
+    color: #e2e8f0;
+    margin: 0 0 2px;
+}
+.studentCode {
+    font-size: 0.75rem;
+    color: #475569;
+    margin: 0;
+}
+
+/* Score cell */
+.scoreCell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.scoreBadge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    min-width: 56px;
+    justify-content: center;
+}
+.scoreBadge[data-level="high"] {
+    background: rgba(16,185,129,0.12);
+    color: #6ee7b7;
+    border: 1px solid rgba(16,185,129,0.25);
+}
+.scoreBadge[data-level="mid"] {
+    background: rgba(245,158,11,0.1);
+    color: #fcd34d;
+    border: 1px solid rgba(245,158,11,0.25);
+}
+.scoreBadge[data-level="low"] {
+    background: rgba(239,68,68,0.1);
+    color: #fca5a5;
+    border: 1px solid rgba(239,68,68,0.2);
+}
+.scoreBadge[data-level="none"] {
+    background: rgba(255,255,255,0.04);
+    color: #475569;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Attempt score pill */
+.attemptPill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    color: #94a3b8;
+    white-space: nowrap;
+}
+.attemptPill[data-cheat="true"] {
+    background: rgba(239,68,68,0.06);
+    border-color: rgba(239,68,68,0.18);
+    color: #fca5a5;
+}
+
+.cheatIcon {
+    color: #f87171;
+}
+
+.notAttempted {
+    color: #334155;
+    font-style: italic;
+    font-size: 0.8rem;
+}
+
+/* Percentage bar */
+.pctBar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.pctTrack {
+    flex: 1;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 99px;
+    overflow: hidden;
+    min-width: 60px;
+}
+.pctFill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.4s ease;
+}
+.pctFill[data-level="high"] { background: linear-gradient(90deg, #10b981, #34d399); }
+.pctFill[data-level="mid"]  { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.pctFill[data-level="low"]  { background: linear-gradient(90deg, #ef4444, #f87171); }
+.pctFill[data-level="none"] { background: rgba(255,255,255,0.1); }
+
+.pctText {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #94a3b8;
+    min-width: 38px;
+    text-align: right;
+}
+
+/* Sort controls */
+.sortControls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+.sortLabel {
+    font-size: 0.78rem;
+    color: #475569;
+    font-weight: 500;
+}
+.sortBtn {
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+    color: #64748b;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.sortBtn:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: #94a3b8;
+}
+.sortBtn.active {
+    background: rgba(99, 102, 241, 0.12);
+    border-color: rgba(99, 102, 241, 0.3);
+    color: #a5b4fc;
+}
+
+/* Rank column */
+.rank {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #334155;
+    width: 28px;
+    text-align: center;
+}
+.rank[data-top="1"] { color: #fbbf24; }
+.rank[data-top="2"] { color: #94a3b8; }
+.rank[data-top="3"] { color: #cd7c56; }

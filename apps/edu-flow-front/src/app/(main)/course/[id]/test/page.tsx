@@ -129,42 +129,72 @@ export default function TestPracticePage() {
             <div className={styles.headerActions}>
               <div className={styles.count}>{tests.length} แบบทดสอบ</div>
               {isTeacherOrAdmin && (
-                <button
-                  className={styles.manageButton}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '10px 20px',
-                    backgroundColor: '#fff',
-                    color: '#6366f1',
-                    border: '1px solid #6366f1',
-                    borderRadius: '8px',
-                    fontSize: '0.95rem',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                  }}
-                  type="button"
-                  onClick={() => router.push(`/course/${id}/test/manage`)}
-                  aria-label="จัดการข้อสอบ"
-                  id="manage-test-btn"
-                >
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                <>
+                  <button
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '10px 20px',
+                      backgroundColor: 'rgba(99,102,241,0.1)',
+                      color: '#a5b4fc',
+                      border: '1px solid rgba(99,102,241,0.25)',
+                      borderRadius: '8px',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                    type="button"
+                    onClick={() => router.push(`/course/${id}/test/dashboard`)}
+                    aria-label="ดู Dashboard คะแนน"
+                    id="dashboard-btn"
                   >
-                    <path d="M12 20h9" />
-                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                  </svg>
-                  จัดการข้อสอบ
-                </button>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="7" height="7" />
+                      <rect x="14" y="3" width="7" height="7" />
+                      <rect x="14" y="14" width="7" height="7" />
+                      <rect x="3" y="14" width="7" height="7" />
+                    </svg>
+                    Dashboard คะแนน
+                  </button>
+                  <button
+                    className={styles.manageButton}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '10px 20px',
+                      backgroundColor: '#fff',
+                      color: '#6366f1',
+                      border: '1px solid #6366f1',
+                      borderRadius: '8px',
+                      fontSize: '0.95rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                    type="button"
+                    onClick={() => router.push(`/course/${id}/test/manage`)}
+                    aria-label="จัดการข้อสอบ"
+                    id="manage-test-btn"
+                  >
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M12 20h9" />
+                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                    </svg>
+                    จัดการข้อสอบ
+                  </button>
+                </>
               )}
             </div>
           </header>

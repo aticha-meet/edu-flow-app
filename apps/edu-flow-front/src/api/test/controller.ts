@@ -6,6 +6,7 @@ import type {
   CreateTestPayload,
   AttemptSummary,
   StartAttemptResponse,
+  TestScoreDashboard,
 } from '@/types/test-type';
 
 const BASE = PAGE_PATH.API_URL;
@@ -93,5 +94,16 @@ export const submitAttempt = async (
     `${BASE}/test/attempt/${attemptId}/submit`,
     { answers, submittedByCheat },
   );
+  return res.data.data;
+};
+
+/**
+ * GET /test/:id/dashboard
+ * ดึง dashboard คะแนนนักเรียนทุกคนใน test นี้ (สำหรับครู/admin)
+ */
+export const getTestScoreDashboard = async (
+  testId: string,
+): Promise<TestScoreDashboard> => {
+  const res = await axiosInstance.get(`${BASE}/test/${testId}/dashboard`);
   return res.data.data;
 };

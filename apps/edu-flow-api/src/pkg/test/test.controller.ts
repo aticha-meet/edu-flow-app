@@ -130,6 +130,30 @@ export class TestController {
   }
 
   /**
+   * GET /test/:id/dashboard
+   * Dashboard คะแนนนักเรียนทุกคนใน test นี้ (สำหรับครู/admin)
+   */
+  async getScoreDashboard(req: Request, res: Response) {
+    try {
+      const { id: testId } = req.params;
+      if (!testId) {
+        return res.status(400).json({ message: 'testId is required' });
+      }
+      const data = await testService.getScoreDashboard(testId);
+      return res.status(200).json({
+        message: 'Successfully fetched dashboard',
+        data,
+      });
+    } catch (err: any) {
+      if (err?.message === 'TEST_NOT_FOUND') {
+        return res.status(404).json({ message: 'Test not found' });
+      }
+      console.error(err);
+      return res.status(500).json({ message: 'Internal Server Error', error: err });
+    }
+  }
+
+  /**
    * DELETE /test/:id
    */
   async deleteTest(req: Request, res: Response) {

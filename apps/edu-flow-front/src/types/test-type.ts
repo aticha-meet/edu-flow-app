@@ -31,6 +31,27 @@ export interface StartAttemptResponse {
   attemptNumber: number;
 }
 
+// ─── Dashboard คะแนน (สำหรับครู) ──────────────────────────────────
+export interface StudentScoreRow {
+  id: string;
+  name: string | null;
+  sureName: string | null;
+  studentId: string | null; // รหัสนักเรียน จาก StudentProfile
+  attempts: AttemptSummary[];
+  bestScore: number | null;
+  percentage: number | null;
+}
+
+export interface TestScoreDashboard {
+  test: {
+    id: string;
+    title: string;
+    totalQuestions: number;
+    durationMinutes: number;
+  };
+  students: StudentScoreRow[];
+}
+
 // ─── Full Test + Questions สำหรับหน้าสอบ ─────────────────────────
 export interface Choice {
   id: string;

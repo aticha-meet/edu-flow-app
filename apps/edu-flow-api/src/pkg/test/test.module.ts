@@ -9,6 +9,9 @@ TestRouter.get('/test', (req, res) => testController.getTestsByCourse(req, res))
 // GET /test/:id/attempts?studentId=... — ประวัติ attempts ของนักเรียน
 TestRouter.get('/test/:id/attempts', (req, res) => testController.getAttempts(req, res));
 
+// GET /test/:id/dashboard — dashboard คะแนนนักเรียน (สำหรับครู/admin)
+TestRouter.get('/test/:id/dashboard', (req, res) => testController.getScoreDashboard(req, res));
+
 // POST /test/attempt/:attemptId/submit — ส่งข้อสอบ (วางก่อน /:id เพื่อหลีกเลี่ยง route conflict)
 TestRouter.post('/test/attempt/:attemptId/submit', (req, res) =>
   testController.submitAttempt(req, res),
