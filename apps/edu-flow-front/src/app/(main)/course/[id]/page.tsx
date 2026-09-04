@@ -3,16 +3,13 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { CourseSidebar } from '@/components/course/CourseSidebar';
+import { CourseSidebar, type MenuKey } from '@/components/course/CourseSidebar';
 import { CourseSyllabus } from '@/components/course/CourseSyllabus';
 import { SyllabusEditModal } from '@/components/course/SyllabusEditModal';
 import { getListCourse, getSyllabus, upsertSyllabus, deleteSyllabusWeek } from '@/api/course/controller';
 import type { SyllabusWeek } from '@/api/course/controller';
 import { useRoleGuard } from '@/utils/useRoleGuard';
 import styles from './course-detail.module.scss';
-
-// ─── Types ────────────────────────────────────────────────────
-type MenuKey = 'syllabus' | 'test-manage' | 'manage-students';
 
 interface CourseDetail {
   id: number;

@@ -84,10 +84,49 @@ export class TestService {
   }
 
   /**
-   * ลบ Test (cascade ลบ Questions และ Choices ด้วย)
+   * ลบ Test พร้อม Attempts, StudentAnswers, Questions และ Choices ทั้งหมด
    */
   async delete(testId: string) {
-    return prisma.test.delete({ where: { id: testId } });
+    return prisma.$transaction(async (tx) => {
+      // 1. หา attempt IDs ทั้งหมดของ test นี้
+      const attempts = await tx.attempt.findMany({
+        where: { testId },
+        select: { id: true },
+      });
+      const attemptIds = attempts.map((a) => a.id);
+
+      // 2. ลบ StudentAnswers ของ attempts ทั้งหมด
+      if (attemptIds.length > 0) {
+        await tx.studentAnswer.deleteMany({
+          where: { attemptId: { in: attemptIds } },
+        });
+      }
+
+      // 3. ลบ Attempts ทั้งหมดของ test นี้
+      await tx.attempt.deleteMany({
+        where: { testId },
+      });
+
+      // 4. ลบ Choices และ Questions ของ test นี้
+      const questions = await tx.question.findMany({
+        where: { testId },
+        select: { id: true },
+      });
+      const questionIds = questions.map((q) => q.id);
+      if (questionIds.length > 0) {
+        await tx.choice.deleteMany({
+          where: { questionId: { in: questionIds } },
+        });
+        await tx.question.deleteMany({
+          where: { testId },
+        });
+      }
+
+      // 5. ลบ Test
+      return tx.test.delete({
+        where: { id: testId },
+      });
+    });
   }
 
   // ─────────────────────────────────────────────────────────────

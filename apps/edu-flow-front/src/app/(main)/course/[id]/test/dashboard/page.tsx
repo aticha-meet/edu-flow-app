@@ -71,10 +71,10 @@ export default function TestDashboardListPage() {
             courseId={courseId}
             courseCode={courseCode}
             courseName={courseName}
-            activeMenu="test"
+            activeMenu="test-dashboard"
             userRole={user?.role}
             onMenuChange={(menu) => {
-              if (menu !== 'test') router.push(`/course/${courseId}`);
+              if (menu === 'syllabus') router.push(`/course/${courseId}`);
             }}
           />
         )}
