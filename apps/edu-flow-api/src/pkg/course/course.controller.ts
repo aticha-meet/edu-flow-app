@@ -157,6 +157,60 @@ export class CourseController {
       return res.status(500).json({ message: 'Internal Server Error', error: err });
     }
   }
+
+  // ─── Syllabus ────────────────────────────────────────────────────
+
+  async getSyllabus(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const syllabus = await courseService.getSyllabus(id);
+      return res.status(200).json({ message: 'Syllabus fetched successfully', data: syllabus });
+    } catch (err) {
+      console.log(err);
+      return res.status(500).json({ message: 'Internal Server Error', error: err });
+    }
+  }
+
+  async upsertSyllabus(req: Request, res: Response) {
+    try {
+      const { id, week } = req.params;
+      const weekNum = parseInt(week, 10);
+      if (isNaN(weekNum) || weekNum < 1) {
+        return res.status(400).json({ message: 'week must be a positive integer' });
+      }
+      const { title, description, topics } = req.body;
+      if (!title) {
+        return res.status(400).json({ message: 'title is required' });
+      }
+      const result = await courseService.upsertSyllabus(id, weekNum, {
+        title,
+        description,
+        topics: Array.isArray(topics) ? topics : [],
+      });
+      return res.status(200).json({ message: 'Syllabus updated successfully', data: result });
+    } catch (err) {
+      console.log(err);
+      return res.status(500).json({ message: 'Internal Server Error', error: err });
+    }
+  }
+
+  async deleteSyllabusWeek(req: Request, res: Response) {
+    try {
+      const { id, week } = req.params;
+      const weekNum = parseInt(week, 10);
+      if (isNaN(weekNum) || weekNum < 1) {
+        return res.status(400).json({ message: 'week must be a positive integer' });
+      }
+      await courseService.deleteSyllabusWeek(id, weekNum);
+      return res.status(200).json({ message: 'Syllabus week deleted successfully' });
+    } catch (err: any) {
+      if (err?.code === 'P2025') {
+        return res.status(404).json({ message: 'Syllabus week not found' });
+      }
+      console.log(err);
+      return res.status(500).json({ message: 'Internal Server Error', error: err });
+    }
+  }
 }
 
 export const courseController = new CourseController();

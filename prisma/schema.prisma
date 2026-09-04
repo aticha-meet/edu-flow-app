@@ -81,6 +81,23 @@ model Course {
   // Relation: รายชื่อนักเรียนที่อยู่ในคลาสนี้
   enrollments Enrollment[]
   tests       Test[]
+  syllabus    CourseSyllabus[]
+}
+
+model CourseSyllabus {
+  id          String   @id @default(cuid())
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  week        Int      // สัปดาห์ที่
+  title       String   // ชื่อหัวข้อ
+  description String?  // คำอธิบายสั้น
+  topics      String[] // รายการหัวข้อย่อย (Postgres array)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([courseId, week]) // 1 course มีแต่ละ week ได้แค่ 1 row
 }
 
 model Test {

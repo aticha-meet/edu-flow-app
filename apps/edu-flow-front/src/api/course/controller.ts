@@ -59,3 +59,56 @@ export const addEnrollment = async (courseId: string, studentId: string) => {
     throw err;
   }
 };
+
+// ─── Syllabus ─────────────────────────────────────────────────────
+
+export const getSyllabus = async (courseId: string) => {
+  try {
+    const request = await axiosInstance.get(
+      `${PAGE_PATH.API_URL}/course/${courseId}/syllabus`,
+    );
+    return request.data.data as SyllabusWeek[];
+  } catch (err) {
+    console.log(err);
+    throw err;
+  }
+};
+
+export const upsertSyllabus = async (
+  courseId: string,
+  week: number,
+  data: { title: string; description?: string; topics: string[] },
+) => {
+  try {
+    const request = await axiosInstance.put(
+      `${PAGE_PATH.API_URL}/course/${courseId}/syllabus/${week}`,
+      data,
+    );
+    return request.data.data as SyllabusWeek;
+  } catch (err) {
+    console.log(err);
+    throw err;
+  }
+};
+
+export const deleteSyllabusWeek = async (courseId: string, week: number) => {
+  try {
+    await axiosInstance.delete(
+      `${PAGE_PATH.API_URL}/course/${courseId}/syllabus/${week}`,
+    );
+  } catch (err) {
+    console.log(err);
+    throw err;
+  }
+};
+
+export interface SyllabusWeek {
+  id: string;
+  courseId: string;
+  week: number;
+  title: string;
+  description: string | null;
+  topics: string[];
+  createdAt: string;
+  updatedAt: string;
+}

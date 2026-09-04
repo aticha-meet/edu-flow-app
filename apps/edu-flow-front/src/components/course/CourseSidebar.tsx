@@ -3,7 +3,7 @@
 import styles from './course-components.module.scss';
 import { useRouter } from 'next/navigation';
 
-export type MenuKey = 'assignment' | 'syllabus' | 'test' | 'test-manage' | 'manage-students';
+export type MenuKey = 'syllabus' | 'test' | 'test-manage' | 'manage-students';
 
 interface MenuItem {
   key: MenuKey;
@@ -122,11 +122,6 @@ export const CourseSidebar = ({
   console.log(userRole);
 
   const menuItems: MenuItem[] = [
-    {
-      key: 'assignment',
-      label: 'Assignment',
-      icon: <MenuIcon name="assignment" />,
-    },
     {
       key: 'syllabus',
       label: 'Course Syllabus',

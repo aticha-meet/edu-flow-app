@@ -18,3 +18,14 @@ CourseRouter.get('/course/:id/students', (req, res) =>
 CourseRouter.post('/course/:id/students', (req, res) =>
   courseController.addEnrollment(req, res),
 );
+
+// ─── Syllabus Routes ─────────────────────────────────────────────
+CourseRouter.get('/course/:id/syllabus', (req, res) =>
+  courseController.getSyllabus(req, res),
+);
+CourseRouter.put('/course/:id/syllabus/:week', (req, res) =>
+  courseController.upsertSyllabus(req, res),
+);
+CourseRouter.delete('/course/:id/syllabus/:week', (req, res) =>
+  courseController.deleteSyllabusWeek(req, res),
+);

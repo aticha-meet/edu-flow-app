@@ -125,6 +125,40 @@ export class CourseService {
       },
     });
   }
+
+  /**
+   * ดึง Syllabus ทั้งหมดของ course เรียงตาม week
+   */
+  async getSyllabus(courseId: string) {
+    return prisma.courseSyllabus.findMany({
+      where: { courseId },
+      orderBy: { week: 'asc' },
+    });
+  }
+
+  /**
+   * สร้างหรืออัปเดต Syllabus ของ week ที่ระบุ
+   */
+  async upsertSyllabus(
+    courseId: string,
+    week: number,
+    data: { title: string; description?: string; topics: string[] },
+  ) {
+    return prisma.courseSyllabus.upsert({
+      where: { courseId_week: { courseId, week } },
+      create: { courseId, week, ...data },
+      update: { ...data },
+    });
+  }
+
+  /**
+   * ลบ Syllabus ของ week ที่ระบุ
+   */
+  async deleteSyllabusWeek(courseId: string, week: number) {
+    return prisma.courseSyllabus.delete({
+      where: { courseId_week: { courseId, week } },
+    });
+  }
 }
 
 export const courseService = new CourseService();

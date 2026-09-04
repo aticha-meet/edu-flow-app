@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useRoleGuard } from '@/utils/useRoleGuard';
 import { getListCourse, getEnrollments, addEnrollment } from '@/api/course/controller';
 import { getListUsers } from '@/api/user/controller';
@@ -29,6 +29,7 @@ interface CourseDetail {
 export default function ManageStudentsPage() {
   const params = useParams();
   const id = params?.id as string;
+  const router = useRouter();
 
   const { session } = useRoleGuard(['TEACHER', 'ADMIN'], '/course');
   const userRole = (session?.user as any)?.role as 'TEACHER' | 'ADMIN' | undefined;
@@ -142,7 +143,9 @@ export default function ManageStudentsPage() {
             courseName={courseName}
             activeMenu="manage-students"
             userRole={userRole}
-            onMenuChange={() => {}}
+            onMenuChange={(menu) => {
+              router.push(`/course/${id}`);
+            }}
           />
         )}
 

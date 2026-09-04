@@ -440,3 +440,352 @@
     margin: 0;
     color: #475569;
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Syllabus Edit Controls
+───────────────────────────────────────────────────────────── */
+
+/* Wrap header + action buttons */
+.weekHeaderRow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+}
+
+.weekHeaderRow .weekHeader {
+    flex: 1;
+}
+
+.weekActions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 10px;
+    border-left: 1px solid rgba(255, 255, 255, 0.04);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.syllabusWeek:hover .weekActions {
+    opacity: 1;
+}
+
+.weekEditBtn,
+.weekDeleteBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+    flex-shrink: 0;
+}
+
+.weekEditBtn {
+    color: #94a3b8;
+}
+.weekEditBtn:hover {
+    background: rgba(99, 102, 241, 0.12);
+    border-color: rgba(99, 102, 241, 0.25);
+    color: #818cf8;
+}
+
+.weekDeleteBtn {
+    color: #94a3b8;
+}
+.weekDeleteBtn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.25);
+    color: #f87171;
+}
+
+/* Add week button at bottom */
+.syllabusAddWeekBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px;
+    margin-top: 8px;
+    background: transparent;
+    border: 1px dashed rgba(99, 102, 241, 0.25);
+    border-radius: 10px;
+    color: #6366f1;
+    font-size: 0.83rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+.syllabusAddWeekBtn:hover {
+    background: rgba(99, 102, 241, 0.06);
+    border-color: rgba(99, 102, 241, 0.4);
+}
+
+/* Empty state add button */
+.emptyAddBtn {
+    margin-top: 4px;
+    padding: 8px 20px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.83rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s ease, transform 0.1s ease;
+}
+.emptyAddBtn:hover {
+    opacity: 0.85;
+    transform: translateY(-1px);
+}
+
+/* Week no topics text */
+.weekNoTopics {
+    font-size: 0.8rem;
+    color: #475569;
+    margin: 0;
+    padding: 4px 0;
+    font-style: italic;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Syllabus Edit Modal
+───────────────────────────────────────────────────────────── */
+
+.syllabusModalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.syllabusModal {
+    position: relative;
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(99,102,241,0.2) transparent;
+    animation: slideUp 0.2s ease;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(99, 102, 241, 0.08);
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(16px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.syllabusModalClose {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+    z-index: 1;
+}
+.syllabusModalClose:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+}
+
+.syllabusModalHeader {
+    padding: 28px 28px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.syllabusModalIcon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.15));
+    border: 1px solid rgba(99,102,241,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #818cf8;
+    margin-bottom: 8px;
+}
+
+.syllabusModalTitle {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin: 0;
+}
+
+.syllabusModalSubtitle {
+    font-size: 0.82rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.syllabusFormBody {
+    padding: 20px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.syllabusFormGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.syllabusFormLabel {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.syllabusFormInput,
+.syllabusFormTextarea {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #f1f5f9;
+    font-size: 0.88rem;
+    font-family: inherit;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease, background 0.15s ease;
+    resize: vertical;
+}
+.syllabusFormInput:focus,
+.syllabusFormTextarea:focus {
+    outline: none;
+    border-color: rgba(99, 102, 241, 0.5);
+    background: rgba(99, 102, 241, 0.04);
+}
+.syllabusFormInput::placeholder,
+.syllabusFormTextarea::placeholder {
+    color: #334155;
+}
+
+/* Topic list */
+.topicList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.topicRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.topicBullet {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    color: #818cf8;
+    font-size: 0.72rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.topicInput {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 7px;
+    padding: 8px 12px;
+    color: #cbd5e1;
+    font-size: 0.84rem;
+    font-family: inherit;
+    transition: border-color 0.15s ease;
+}
+.topicInput:focus {
+    outline: none;
+    border-color: rgba(99, 102, 241, 0.4);
+}
+.topicInput::placeholder { color: #334155; }
+
+.topicRemoveBtn {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    background: transparent;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+.topicRemoveBtn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+}
+
+.addTopicBtn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: transparent;
+    border: 1px dashed rgba(99, 102, 241, 0.2);
+    border-radius: 7px;
+    color: #6366f1;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+    align-self: flex-start;
+}
+.addTopicBtn:hover {
+    background: rgba(99, 102, 241, 0.06);
+    border-color: rgba(99, 102, 241, 0.35);
+}
+
+/* Modal Actions */
+.syllabusModalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 28px 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
