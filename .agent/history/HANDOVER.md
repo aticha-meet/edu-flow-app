@@ -1,77 +1,51 @@
 # 📝 Handover Notes: สรุปสิ่งที่ทำไปล่าสุด (EduFlow)
-**วันที่อัปเดตล่าสุด:** 6 กรกฎาคม 2026
+**วันที่อัปเดตล่าสุด:** 4 กันยายน 2026
 
 เอกสารนี้สรุปสถานะปัจจุบันของโปรเจกต์ **EduFlow** และสิ่งที่จำเป็นต้องทำต่อ
 
 ---
 
-## 1. 🔑 ระบบ Auth & Token (เสร็จแล้ว ✅)
-* ระบบ Next-Auth + Google OAuth ทำงานได้
-* Middleware ตรวจ `ac_tk` cookie → redirect ไป `/login` หรือ `/callback` สำหรับ silent refresh
-* Backend middleware `handleRefreshToken` ตรวจ Access Token / Refresh Token
-* Cookie `ac_tk` (Access Token) + `role` ถูก set จาก backend
+## 1. 🔑 ระบบ Auth & Role-Based Access (เสร็จแล้ว ✅)
+* ระบบ Next-Auth + Google OAuth
+* Middleware ตรวจ `ac_tk` cookie และ refresh token flow
+* Role-based permissions: `ADMIN`, `TEACHER`, `STUDENT`
+* การจัดการโปรไฟล์และคอร์สตามสิทธิ์ของ Role
 
 ---
 
-## 2. 🎨 หน้า UI ที่สร้างแล้ว (เสร็จแล้ว ✅)
-* **Login Page** — Google Sign-in
-* **Callback Page** — SCSS Module, รองรับ fresh login + silent refresh
-* **Class Page** — Class cards grid พร้อม skeleton loading, filter tabs, stats row
+## 2. 👥 การจัดการคอร์ส & นักเรียน (เสร็จแล้ว ✅)
+* หน้า `/course` และ `/course/[id]`
+* จัดการ Syllabus และบทเรียน
+* หน้า **Manage Students** (`/course/[id]/students`) — ดูรายชื่อนักเรียน, ค้นหา, และเพิ่มนักเรียนเข้าคอร์ส
 
 ---
 
-## 3. 🆕 Create Class API (เสร็จแล้ว ✅ — 6 ก.ค. 2026)
+## 3. 📝 ระบบ Test, Anti-Cheat & Dashboard (เสร็จแล้ว ✅ — 4 ก.ย. 2026)
 
-### Backend
-* **`POST /class`** endpoint ใน [`route.ts`](file:///D:/project/edu-flow-app/apps/edu-flow-api/src/pkg/class/route.ts)
-* **`createClass` controller** ใน [`controller.ts`](file:///D:/project/edu-flow-app/apps/edu-flow-api/src/pkg/class/controller.ts):
-  - ตรวจสิทธิ์ ADMIN (403 ถ้าไม่ใช่)
-  - Validate `className` + `teacherId` required
-  - ตรวจ `teacherId` ว่ามีตัวตนและเป็น TEACHER/ADMIN
-  - สร้าง Class ผ่าน Prisma → return 201
+### 3.1 ข้อสอบ & การจำกัด Attempt
+* กำหนด `durationMinutes` ตอนสร้างข้อสอบได้
+* นักเรียนทำข้อสอบได้สูงสุด **2 ครั้ง (Max 2 Attempts)**
+* ระบบ **Anti-Cheat Guard** (ตรวจจับ fullscreen / tab blur) — หากทำผิดเกินกำหนด จะทำการ auto-submit และคำนวณคะแนนตามข้อที่ตอบไว้ทันที
 
-### Frontend
-* **API function** `createClass()` ใน [`controller.ts`](file:///D:/project/edu-flow-app/apps/edu-flow-front/src/api/class/controller.ts)
-* **Create Class Modal** ใน [`page.tsx`](file:///D:/project/edu-flow-app/apps/edu-flow-front/src/app/class/page.tsx):
-  - ตรวจ `role === 'ADMIN'` จาก `useUserStore` → แสดงปุ่มเฉพาะ ADMIN
-  - Popup modal พร้อมฟอร์ม (className, description, teacherId)
-  - Glassmorphism design, slide-up animation, form validation
-  - Error/Success messages, loading spinner
-  - Auto-refresh class list หลังสร้างสำเร็จ
-
----
-
-## 4. 🗄️ Database Schema (ปัจจุบัน)
-
-| Model | สถานะ |
-|---|---|
-| `User` | ✅ มี role (ADMIN/TEACHER/STUDENT) |
-| `TeacherProfile` | ✅ เก็บ department |
-| `StudentProfile` | ✅ เก็บ studentId |
-| `Class` | ✅ className, description, teacherId, createdAt |
-| `Enrollment` | ✅ many-to-many นักเรียน-คลาส |
+### 3.2 Teacher Test Score Dashboard
+* **Backend:** `GET /test/:id/dashboard` — ดึงข้อมูลนักเรียนทั้งหมดในคอร์ส พร้อมคะแนน attempt 1, 2, best score, percentage, timestamp และสถานะ cheat
+* **Frontend:**
+  * หน้า `/course/[id]/test/dashboard` — สรุปรายการแบบทดสอบทั้งหมดในคอร์ส
+  * หน้า `/course/[id]/test/dashboard/[testId]` — ตารางคะแนนนักเรียนรายบุคคลพร้อมตัวกรอง/เรียงลำดับ, Top 3 highlights, progress bar และ summary stats cards
 
 ---
 
 ## 📋 สิ่งที่ต้องทำต่อ (Next Steps)
 
 ### 🔴 Priority สูง
-1. **หน้า Class — เชื่อม API จริง**
-   - เปลี่ยน mock data → ใช้ข้อมูลจาก `GET /class` API จริง
-   - Map ข้อมูลจาก Prisma model ให้ตรงกับ `ClassItem` interface ที่หน้าบ้านใช้
+1. **เพิ่มเมนู "Dashboard Score" ใน Course Sidebar**
+   - เพิ่มเมนูใน [`CourseSidebar.tsx`](file:///d:/project/edu-flow-app/apps/edu-flow-front/src/components/course/CourseSidebar.tsx) ให้เฉพาะ Teacher/Admin เห็น เพื่อกดเข้าหน้า Dashboard ได้สะดวกรวดเร็ว
 
-2. **เพิ่ม Teacher Dropdown ใน Create Modal**
-   - ดึงรายชื่อ Teacher จาก API (`GET /user?role=TEACHER`) แทนการกรอก UUID ด้วยมือ
+2. **ตรวจสอบและแก้ไข API การลบ Test (Delete Test)**
+   - ตรวจสอบว่า `DELETE /test/:id` มีใน Backend หรือยัง และตรวจสอบการผูก logic ฝั่ง Frontend ในหน้าจัดการข้อสอบ
 
 ### 🟡 Priority กลาง
-3. **Class Detail Page**
-   - สร้าง `/class/[id]` route
-   - ดึงรายละเอียด class, รายชื่อนักเรียน, assignment
-
-4. **Backend — `requireAdmin` Middleware**
-   - สร้าง middleware แยกสำหรับตรวจ role เพื่อ reuse ได้ทุก route
-
-### 🟢 Backlog
-5. **Enrollment API** — เพิ่ม/ลบ นักเรียนเข้า/ออก class
-6. **Edit/Delete Class** — CRUD เต็มรูปแบบ
-7. **Next-Auth Type Extension** — เพิ่ม `refreshToken`, `expiresAt` ใน JWT interface
+3. **Export Test Scores**
+   - ฟีเจอร์ Export ตารางคะแนนนักเรียนเป็น CSV หรือ Excel
+4. **Question Breakdown View (Phase ถัดไป)**
+   - ดูผลการตอบแบบเจาะลึกรายข้อสำหรับครู
