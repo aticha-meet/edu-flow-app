@@ -16,6 +16,21 @@ export interface TestSummary {
   };
 }
 
+// ─── Attempt — ประวัติการทำข้อสอบของนักเรียน ─────────────────────
+export interface AttemptSummary {
+  id: string;
+  attemptNumber: number; // 1 หรือ 2
+  score: number | null;
+  submittedAt: string | null;
+  submittedByCheat: boolean;
+  totalQuestions: number;
+}
+
+export interface StartAttemptResponse {
+  attemptId: string;
+  attemptNumber: number;
+}
+
 // ─── Full Test + Questions สำหรับหน้าสอบ ─────────────────────────
 export interface Choice {
   id: string;

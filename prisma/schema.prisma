@@ -137,11 +137,16 @@ model Attempt {
   testId String
   test   Test   @relation(fields: [testId], references: [id])
 
+  attemptNumber    Int     @default(1) // ครั้งที่ทำ (1 หรือ 2)
+  submittedByCheat Boolean @default(false) // true = ถูก auto-submit เพราะโกง
+
   startedAt   DateTime  @default(now())
   submittedAt DateTime?
   score       Int?
 
   answers StudentAnswer[]
+
+  @@unique([studentId, testId, attemptNumber]) // ป้องกัน race condition
 }
 
 model Question {

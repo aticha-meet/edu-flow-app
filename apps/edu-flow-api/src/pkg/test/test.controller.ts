@@ -142,6 +142,117 @@ export class TestController {
       return res.status(500).json({ message: 'Internal Server Error', error: err });
     }
   }
+
+  // ─────────────────────────────────────────────────────────────
+  // Attempt Endpoints
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * GET /test/:id/attempts?studentId=...
+   * ดูว่านักเรียนทำข้อสอบนี้ไปกี่ครั้ง + ผลแต่ละครั้ง
+   */
+  async getAttempts(req: Request, res: Response) {
+    try {
+      const { id: testId } = req.params;
+      const { studentId } = req.query as { studentId: string };
+
+      if (!testId || !studentId) {
+        return res.status(400).json({ message: 'testId and studentId are required' });
+      }
+
+      const attempts = await testService.getAttemptsByStudent(testId, studentId);
+
+      // แปลง response ให้ใช้งานง่ายฝั่ง frontend
+      const data = attempts.map((a) => ({
+        id: a.id,
+        attemptNumber: a.attemptNumber,
+        score: a.score,
+        submittedAt: a.submittedAt,
+        submittedByCheat: a.submittedByCheat,
+        totalQuestions: a.test._count.questions,
+      }));
+
+      return res.status(200).json({
+        message: 'Successfully fetched attempts',
+        data,
+      });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ message: 'Internal Server Error', error: err });
+    }
+  }
+
+  /**
+   * POST /test/:id/attempt/start
+   * body: { studentId: string }
+   * เริ่มทำข้อสอบ — สร้าง Attempt ใหม่ (ตรวจสิทธิ์ก่อน)
+   */
+  async startAttempt(req: Request, res: Response) {
+    try {
+      const { id: testId } = req.params;
+      const { studentId } = req.body as { studentId: string };
+
+      if (!testId || !studentId) {
+        return res.status(400).json({ message: 'testId and studentId are required' });
+      }
+
+      const attempt = await testService.startAttempt(testId, studentId, 2);
+
+      return res.status(201).json({
+        message: 'Attempt started',
+        data: { attemptId: attempt.id, attemptNumber: attempt.attemptNumber },
+      });
+    } catch (err: any) {
+      if (err?.message === 'ATTEMPT_LIMIT_REACHED') {
+        return res.status(403).json({ message: 'ATTEMPT_LIMIT_REACHED' });
+      }
+      console.error(err);
+      return res.status(500).json({ message: 'Internal Server Error', error: err });
+    }
+  }
+
+  /**
+   * POST /test/attempt/:attemptId/submit
+   * body: { answers: Record<questionId, choiceId>, submittedByCheat?: boolean }
+   * ส่งข้อสอบ + บันทึกคะแนน
+   */
+  async submitAttempt(req: Request, res: Response) {
+    try {
+      const { attemptId } = req.params;
+      const { answers, submittedByCheat = false } = req.body as {
+        answers: Record<string, string>;
+        submittedByCheat?: boolean;
+      };
+
+      if (!attemptId || !answers) {
+        return res.status(400).json({ message: 'attemptId and answers are required' });
+      }
+
+      const result = await testService.submitAttempt(attemptId, answers, submittedByCheat);
+
+      // result เป็น array จาก $transaction — element สุดท้ายคือ updated Attempt
+      const updatedAttempt = result[result.length - 1] as any;
+
+      return res.status(200).json({
+        message: 'Attempt submitted successfully',
+        data: {
+          attemptId,
+          score: updatedAttempt.score,
+          submittedAt: updatedAttempt.submittedAt,
+          submittedByCheat: updatedAttempt.submittedByCheat,
+        },
+      });
+    } catch (err: any) {
+      if (err?.message === 'ATTEMPT_NOT_FOUND') {
+        return res.status(404).json({ message: 'Attempt not found' });
+      }
+      if (err?.message === 'ALREADY_SUBMITTED') {
+        return res.status(409).json({ message: 'Attempt already submitted' });
+      }
+      console.error(err);
+      return res.status(500).json({ message: 'Internal Server Error', error: err });
+    }
+  }
 }
 
 export const testController = new TestController();
