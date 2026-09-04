@@ -128,6 +128,10 @@ export default function TestManagePage() {
               if (menu === 'test-manage') return;
               if (menu === 'test') {
                 router.push(`/course/${id}/test`);
+              } else if (menu === 'test-dashboard') {
+                router.push(`/course/${id}/test/dashboard`);
+              } else if (menu === 'manage-students') {
+                router.push(`/course/${id}/students`);
               } else {
                 router.push(`/course/${id}`);
               }
