@@ -87,6 +87,7 @@ export class CourseService {
     roomId?: string;
     code: string;
     maxStudents?: number;
+    status: 'upcoming' | 'active' | 'complete';
   }) {
     return prisma.course.create({
       data: data,
@@ -157,6 +158,51 @@ export class CourseService {
   async deleteSyllabusWeek(courseId: string, week: number) {
     return prisma.courseSyllabus.delete({
       where: { courseId_week: { courseId, week } },
+    });
+  }
+
+  // ─── Course Settings ──────────────────────────────────────────────
+
+  /**
+   * อัปเดต config ของ course (ชื่อ, description, status, maxStudents, roomId, code)
+   */
+  async updateCourse(
+    id: string,
+    data: {
+      className?: string;
+      description?: string;
+      roomId?: string;
+      code?: string;
+      maxStudents?: number;
+      status?: 'upcoming' | 'active' | 'complete';
+    },
+  ) {
+    return prisma.course.update({
+      where: { id },
+      data,
+      include: {
+        teacher: { select: { id: true, name: true, sureName: true, email: true } },
+        _count: { select: { enrollments: true } },
+      },
+    });
+  }
+
+  /**
+   * ลบ course ตาม id (children cascade ผ่าน Prisma schema)
+   */
+  async deleteCourse(id: string) {
+    return prisma.course.delete({
+      where: { id },
+    });
+  }
+
+  /**
+   * ตรวจสอบว่า course นั้นมีอยู่จริงและ teacherId ตรงกับ owner หรือไม่
+   */
+  async findCourseOwner(id: string) {
+    return prisma.course.findUnique({
+      where: { id },
+      select: { id: true, teacherId: true, className: true },
     });
   }
 }

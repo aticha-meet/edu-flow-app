@@ -6,16 +6,18 @@ import Link from 'next/link';
 import { CourseSidebar, type MenuKey } from '@/components/course/CourseSidebar';
 import { CourseSyllabus } from '@/components/course/CourseSyllabus';
 import { SyllabusEditModal } from '@/components/course/SyllabusEditModal';
+import { CourseSettings } from '@/components/course/CourseSettings';
 import { getListCourse, getSyllabus, upsertSyllabus, deleteSyllabusWeek } from '@/api/course/controller';
 import type { SyllabusWeek } from '@/api/course/controller';
 import { useRoleGuard } from '@/utils/useRoleGuard';
 import styles from './course-detail.module.scss';
 
 interface CourseDetail {
-  id: number;
+  id: string;
   code: string | null;
   className: string;
   description: string | null;
+  roomId: string | null;
   maxStudents: number;
   status: 'active' | 'upcoming' | 'complete';
   teacher: { name: string | null; sureName: string | null };
@@ -47,11 +49,9 @@ export default function CourseDetailPage() {
   const id = params?.id as string;
 
   const { session } = useRoleGuard(['TEACHER', 'ADMIN', 'STUDENT'], '/login');
-  const userRole = (session?.user as any)?.role as
-    | 'TEACHER'
-    | 'ADMIN'
-    | 'STUDENT'
-    | undefined;
+  const user = session?.user as any;
+  const userRole = user?.role as 'TEACHER' | 'ADMIN' | 'STUDENT' | undefined;
+  const userId = user?.id as string | undefined;
 
   const canEdit = userRole === 'TEACHER' || userRole === 'ADMIN';
 
@@ -141,9 +141,26 @@ export default function CourseDetailPage() {
     setOpenWeeks((prev) => new Set([...prev, week]));
   };
 
+  // ─── Course Settings Handlers ─────────────────────────────
+  const handleCourseUpdated = (updated: any) => {
+    setCourse((prev) => prev ? { ...prev, ...updated } : prev);
+  };
+
   const courseCode = course?.code ?? `COURSE-${id}`;
   const courseName = course?.className ?? 'รายวิชา';
   const usedWeeks = syllabusWeeks.map((w) => w.week);
+
+  // ─── Determine active panel title/subtitle ─────────────────
+  const panelMeta = {
+    syllabus: {
+      title: 'Course Syllabus',
+      subtitle: isSyllabusLoading ? 'กำลังโหลด...' : `เนื้อหา ${syllabusWeeks.length} สัปดาห์`,
+    },
+    settings: {
+      title: 'Course Settings',
+      subtitle: 'จัดการและปรับแต่งรายวิชา',
+    },
+  };
 
   return (
     <div className={styles.page}>
@@ -190,19 +207,29 @@ export default function CourseDetailPage() {
               <Link href="/course">ห้องเรียน</Link>
               <span className={styles.breadcrumbSep}>›</span>
               <span>{isLoading ? '...' : courseName}</span>
+              {activeMenu === 'settings' && (
+                <>
+                  <span className={styles.breadcrumbSep}>›</span>
+                  <span>Settings</span>
+                </>
+              )}
             </nav>
           </div>
 
           {/* Title Row */}
           <div className={styles.contentTitleRow}>
             <div>
-              <h1 className={styles.contentTitle}>Course Syllabus</h1>
+              <h1 className={styles.contentTitle}>
+                {activeMenu === 'settings' ? 'Course Settings' : 'Course Syllabus'}
+              </h1>
               <p className={styles.contentSubtitle}>
-                เนื้อหาและแผนการสอนตลอดภาคการศึกษา
+                {activeMenu === 'settings'
+                  ? 'จัดการและปรับแต่งรายวิชา'
+                  : 'เนื้อหาและแผนการสอนตลอดภาคการศึกษา'}
               </p>
             </div>
-            {/* Add Week Button (TEACHER/ADMIN เท่านั้น) */}
-            {canEdit && !isSyllabusLoading && (
+            {/* Add Week Button — only on syllabus panel */}
+            {activeMenu === 'syllabus' && canEdit && !isSyllabusLoading && (
               <button
                 className={styles.addWeekHeaderBtn}
                 onClick={handleOpenAdd}
@@ -217,57 +244,64 @@ export default function CourseDetailPage() {
             )}
           </div>
 
-          {/* Panel */}
-          <div className={styles.panel} id="syllabus-panel">
-            <PanelHeader
-              iconPath={
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                  <line x1="16" y1="13" x2="8" y2="13" />
-                  <line x1="16" y1="17" x2="8" y2="17" />
-                </svg>
-              }
-              title="Course Syllabus"
-              subtitle={
-                isSyllabusLoading
-                  ? 'กำลังโหลด...'
-                  : `เนื้อหา ${syllabusWeeks.length} สัปดาห์`
-              }
-            />
-            <div className={styles.panelBody}>
-              {isSyllabusLoading ? (
-                <div style={{ padding: '24px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {[1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className={styles.skeletonLine}
-                      style={{ height: 52, borderRadius: 10 }}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <CourseSyllabus
-                  weeks={syllabusWeeks}
-                  openWeeks={openWeeks}
-                  onToggleWeek={handleToggleWeek}
-                  canEdit={canEdit}
-                  onAddWeek={handleOpenAdd}
-                  onEditWeek={handleOpenEdit}
-                  onDeleteWeek={handleDeleteWeek}
-                />
-              )}
+          {/* ── Syllabus Panel ── */}
+          {activeMenu === 'syllabus' && (
+            <div className={styles.panel} id="syllabus-panel">
+              <PanelHeader
+                iconPath={
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                  </svg>
+                }
+                title={panelMeta.syllabus.title}
+                subtitle={panelMeta.syllabus.subtitle}
+              />
+              <div className={styles.panelBody}>
+                {isSyllabusLoading ? (
+                  <div style={{ padding: '24px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {[1, 2, 3].map((i) => (
+                      <div
+                        key={i}
+                        className={styles.skeletonLine}
+                        style={{ height: 52, borderRadius: 10 }}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <CourseSyllabus
+                    weeks={syllabusWeeks}
+                    openWeeks={openWeeks}
+                    onToggleWeek={handleToggleWeek}
+                    canEdit={canEdit}
+                    onAddWeek={handleOpenAdd}
+                    onEditWeek={handleOpenEdit}
+                    onDeleteWeek={handleDeleteWeek}
+                  />
+                )}
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* ── Settings Panel ── */}
+          {activeMenu === 'settings' && course && canEdit && (
+            <CourseSettings
+              course={{
+                id: course.id as string,
+                className: course.className,
+                description: course.description,
+                code: course.code,
+                roomId: course.roomId,
+                maxStudents: course.maxStudents,
+                status: course.status,
+              }}
+              userRole={userRole as 'TEACHER' | 'ADMIN'}
+              userId={userId ?? ''}
+              onCourseUpdated={handleCourseUpdated}
+            />
+          )}
         </main>
       </div>
 
@@ -284,3 +318,5 @@ export default function CourseDetailPage() {
     </div>
   );
 }
+
+

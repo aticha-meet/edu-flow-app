@@ -102,6 +102,47 @@ export const deleteSyllabusWeek = async (courseId: string, week: number) => {
   }
 };
 
+// ─── Course Settings ──────────────────────────────────────────────
+
+export const updateCourse = async (
+  courseId: string,
+  data: {
+    className?: string;
+    description?: string;
+    roomId?: string;
+    code?: string;
+    maxStudents?: number;
+    status?: 'upcoming' | 'active' | 'complete';
+    role: string;
+    userId: string;
+  },
+) => {
+  try {
+    const request = await axiosInstance.patch(
+      `${PAGE_PATH.API_URL}/course/${courseId}`,
+      data,
+    );
+    return request.data.data;
+  } catch (err) {
+    console.log(err);
+    throw err;
+  }
+};
+
+export const deleteCourse = async (
+  courseId: string,
+  meta: { role: string; userId: string },
+) => {
+  try {
+    await axiosInstance.delete(`${PAGE_PATH.API_URL}/course/${courseId}`, {
+      data: meta,
+    });
+  } catch (err) {
+    console.log(err);
+    throw err;
+  }
+};
+
 export interface SyllabusWeek {
   id: string;
   courseId: string;
@@ -112,3 +153,4 @@ export interface SyllabusWeek {
   createdAt: string;
   updatedAt: string;
 }
+

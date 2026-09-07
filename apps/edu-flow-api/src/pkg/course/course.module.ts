@@ -12,6 +12,12 @@ CourseRouter.post('/course', (req, res) =>
 CourseRouter.get('/course/:id', (req, res) =>
   courseController.getCourseById(req, res),
 );
+CourseRouter.patch('/course/:id', (req, res) =>
+  courseController.updateCourse(req, res),
+);
+CourseRouter.delete('/course/:id', (req, res) =>
+  courseController.deleteCourse(req, res),
+);
 CourseRouter.get('/course/:id/students', (req, res) =>
   courseController.getEnrollments(req, res),
 );
@@ -29,3 +35,4 @@ CourseRouter.put('/course/:id/syllabus/:week', (req, res) =>
 CourseRouter.delete('/course/:id/syllabus/:week', (req, res) =>
   courseController.deleteSyllabusWeek(req, res),
 );
+

@@ -28,13 +28,13 @@ export class CourseController {
 
       return role === 'TEACHER'
         ? res.status(200).json({
-            message: 'Successfully get class teacher',
-            data: data,
-          })
+          message: 'Successfully get class teacher',
+          data: data,
+        })
         : res.status(200).json({
-            message: 'Successfully get class student',
-            data: data,
-          });
+          message: 'Successfully get class student',
+          data: data,
+        });
     } catch (err) {
       console.log(err);
       return res
@@ -76,6 +76,7 @@ export class CourseController {
         roomId,
         code,
         maxStudents,
+        status
       } = req.body;
 
       // ตรวจสอบสิทธิ์: ADMIN หรือ TEACHER เท่านั้นที่สร้าง Class ได้
@@ -112,6 +113,7 @@ export class CourseController {
         roomId,
         code,
         maxStudents: maxStudents ? parseInt(maxStudents) : undefined,
+        status: status || 'upcoming',
       });
       return res
         .status(201)
@@ -211,6 +213,91 @@ export class CourseController {
       return res.status(500).json({ message: 'Internal Server Error', error: err });
     }
   }
+
+  // ─── Course Settings ──────────────────────────────────────────────
+
+  async updateCourse(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { role, userId, className, description, roomId, code, maxStudents, status } = req.body;
+
+      if (!id) {
+        return res.status(400).json({ message: 'Invalid course ID' });
+      }
+
+      // ตรวจสอบสิทธิ์: ADMIN หรือ TEACHER เท่านั้น
+      if (role !== 'ADMIN' && role !== 'TEACHER') {
+        return res.status(403).json({ message: 'Access denied: Only ADMIN or TEACHER can update courses' });
+      }
+
+      // TEACHER ต้องเป็นเจ้าของ course
+      if (role === 'TEACHER') {
+        const course = await courseService.findCourseOwner(id);
+        if (!course) {
+          return res.status(404).json({ message: 'Course not found' });
+        }
+        if (course.teacherId !== userId) {
+          return res.status(403).json({ message: 'Access denied: You can only update your own courses' });
+        }
+      }
+
+      const updated = await courseService.updateCourse(id, {
+        className,
+        description,
+        roomId,
+        code,
+        maxStudents: maxStudents !== undefined ? parseInt(maxStudents) : undefined,
+        status,
+      });
+
+      return res.status(200).json({ message: 'Course updated successfully', data: updated });
+    } catch (err: any) {
+      if (err?.code === 'P2002') {
+        return res.status(409).json({ message: 'Course code already exists' });
+      }
+      if (err?.code === 'P2025') {
+        return res.status(404).json({ message: 'Course not found' });
+      }
+      console.log(err);
+      return res.status(500).json({ message: 'Internal Server Error', error: err });
+    }
+  }
+
+  async deleteCourse(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { role, userId } = req.body;
+
+      if (!id) {
+        return res.status(400).json({ message: 'Invalid course ID' });
+      }
+
+      // ตรวจสอบสิทธิ์: ADMIN หรือ TEACHER เท่านั้น
+      if (role !== 'ADMIN' && role !== 'TEACHER') {
+        return res.status(403).json({ message: 'Access denied: Only ADMIN or TEACHER can delete courses' });
+      }
+
+      const course = await courseService.findCourseOwner(id);
+      if (!course) {
+        return res.status(404).json({ message: 'Course not found' });
+      }
+
+      // TEACHER ต้องเป็นเจ้าของ course
+      if (role === 'TEACHER' && course.teacherId !== userId) {
+        return res.status(403).json({ message: 'Access denied: You can only delete your own courses' });
+      }
+
+      await courseService.deleteCourse(id);
+      return res.status(200).json({ message: 'Course deleted successfully' });
+    } catch (err: any) {
+      if (err?.code === 'P2025') {
+        return res.status(404).json({ message: 'Course not found' });
+      }
+      console.log(err);
+      return res.status(500).json({ message: 'Internal Server Error', error: err });
+    }
+  }
 }
 
 export const courseController = new CourseController();
+
