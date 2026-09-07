@@ -7,7 +7,12 @@ import { CourseSidebar, type MenuKey } from '@/components/course/CourseSidebar';
 import { CourseSyllabus } from '@/components/course/CourseSyllabus';
 import { SyllabusEditModal } from '@/components/course/SyllabusEditModal';
 import { CourseSettings } from '@/components/course/CourseSettings';
-import { getListCourse, getSyllabus, upsertSyllabus, deleteSyllabusWeek } from '@/api/course/controller';
+import {
+  getListCourse,
+  getSyllabus,
+  upsertSyllabus,
+  deleteSyllabusWeek,
+} from '@/api/course/controller';
 import type { SyllabusWeek } from '@/api/course/controller';
 import { useRoleGuard } from '@/utils/useRoleGuard';
 import styles from './course-detail.module.scss';
@@ -143,7 +148,7 @@ export default function CourseDetailPage() {
 
   // ─── Course Settings Handlers ─────────────────────────────
   const handleCourseUpdated = (updated: any) => {
-    setCourse((prev) => prev ? { ...prev, ...updated } : prev);
+    setCourse((prev) => (prev ? { ...prev, ...updated } : prev));
   };
 
   const courseCode = course?.code ?? `COURSE-${id}`;
@@ -154,7 +159,9 @@ export default function CourseDetailPage() {
   const panelMeta = {
     syllabus: {
       title: 'Course Syllabus',
-      subtitle: isSyllabusLoading ? 'กำลังโหลด...' : `เนื้อหา ${syllabusWeeks.length} สัปดาห์`,
+      subtitle: isSyllabusLoading
+        ? 'กำลังโหลด...'
+        : `เนื้อหา ${syllabusWeeks.length} สัปดาห์`,
     },
     settings: {
       title: 'Course Settings',
@@ -220,7 +227,9 @@ export default function CourseDetailPage() {
           <div className={styles.contentTitleRow}>
             <div>
               <h1 className={styles.contentTitle}>
-                {activeMenu === 'settings' ? 'Course Settings' : 'Course Syllabus'}
+                {activeMenu === 'settings'
+                  ? 'Course Settings'
+                  : 'Course Syllabus'}
               </h1>
               <p className={styles.contentSubtitle}>
                 {activeMenu === 'settings'
@@ -235,7 +244,16 @@ export default function CourseDetailPage() {
                 onClick={handleOpenAdd}
                 id="add-week-header-btn"
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <line x1="12" y1="5" x2="12" y2="19" />
                   <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
@@ -249,7 +267,16 @@ export default function CourseDetailPage() {
             <div className={styles.panel} id="syllabus-panel">
               <PanelHeader
                 iconPath={
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                     <polyline points="14 2 14 8 20 8" />
                     <line x1="16" y1="13" x2="8" y2="13" />
@@ -261,7 +288,14 @@ export default function CourseDetailPage() {
               />
               <div className={styles.panelBody}>
                 {isSyllabusLoading ? (
-                  <div style={{ padding: '24px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div
+                    style={{
+                      padding: '24px 0',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 10,
+                    }}
+                  >
                     {[1, 2, 3].map((i) => (
                       <div
                         key={i}
@@ -318,5 +352,3 @@ export default function CourseDetailPage() {
     </div>
   );
 }
-
-

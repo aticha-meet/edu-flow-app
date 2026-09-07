@@ -7,7 +7,13 @@ import { useRoleGuard } from '@/utils/useRoleGuard';
 import { getListCourse, getEnrollments, addEnrollment } from '@/api/course/controller';
 import { getListUsers } from '@/api/user/controller';
 import { CourseSidebar } from '@/components/course/CourseSidebar';
+import { ImportCSVModal } from '@/components/course/ImportCSVModal';
 import styles from './students.module.scss';
+
+interface StudentProfile {
+  section: string | null;
+  room: number | null;
+}
 
 interface StudentItem {
   id: number;
@@ -17,6 +23,7 @@ interface StudentItem {
     name: string | null;
     sureName: string | null;
     email: string;
+    studentProfile?: StudentProfile | null;
   };
 }
 
@@ -47,8 +54,12 @@ export default function ManageStudentsPage() {
   const [addError, setAddError] = useState('');
   const [addSuccess, setAddSuccess] = useState('');
 
-  // Search filter
+  // CSV Import modal
+  const [isCSVModalOpen, setIsCSVModalOpen] = useState(false);
+
+  // Search & filter
   const [search, setSearch] = useState('');
+  const [filterSection, setFilterSection] = useState('');
 
   const fetchData = useCallback(async () => {
     if (!id) return;
@@ -118,10 +129,32 @@ export default function ManageStudentsPage() {
   const enrolledIds = new Set(enrollments.map((e) => e.student.id));
   const availableStudents = allStudents.filter((s) => !enrolledIds.has(s.id));
 
+  // ดึง unique sections สำหรับ filter dropdown
+  const sections = Array.from(
+    new Set(
+      enrollments
+        .map((e) => e.student.studentProfile?.section)
+        .filter(Boolean) as string[]
+    )
+  ).sort();
+
   const filtered = enrollments.filter((e) => {
     const fullName = [e.student.name, e.student.sureName].filter(Boolean).join(' ').toLowerCase();
-    return fullName.includes(search.toLowerCase()) || e.student.email.toLowerCase().includes(search.toLowerCase());
+    const matchSearch =
+      fullName.includes(search.toLowerCase()) ||
+      e.student.email.toLowerCase().includes(search.toLowerCase());
+    const matchSection = filterSection
+      ? e.student.studentProfile?.section === filterSection
+      : true;
+    return matchSearch && matchSection;
   });
+
+  // สร้าง label ห้องเรียน
+  const classroomLabel = (profile?: StudentProfile | null) => {
+    if (!profile) return null;
+    const parts = [profile.section, profile.room ? `ห้อง ${profile.room}` : null].filter(Boolean);
+    return parts.length ? parts.join(' ') : null;
+  };
 
   return (
     <div className={styles.page}>
@@ -143,9 +176,7 @@ export default function ManageStudentsPage() {
             courseName={courseName}
             activeMenu="manage-students"
             userRole={userRole}
-            onMenuChange={(menu) => {
-              router.push(`/course/${id}`);
-            }}
+            onMenuChange={() => { router.push(`/course/${id}`); }}
           />
         )}
 
@@ -168,19 +199,35 @@ export default function ManageStudentsPage() {
                 จัดการรายชื่อนักเรียนใน{isLoading ? '...' : ` ${courseName}`}
               </p>
             </div>
-            <button
-              className={styles.addBtn}
-              id="add-student-btn"
-              onClick={handleOpenModal}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                <circle cx="8.5" cy="7" r="4" />
-                <line x1="20" y1="8" x2="20" y2="14" />
-                <line x1="23" y1="11" x2="17" y2="11" />
-              </svg>
-              เพิ่มนักเรียน
-            </button>
+            <div className={styles.headerActions}>
+              {/* Import CSV */}
+              <button
+                className={styles.importCsvBtn}
+                id="import-csv-btn"
+                onClick={() => setIsCSVModalOpen(true)}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Import CSV
+              </button>
+              {/* Add single student */}
+              <button
+                className={styles.addBtn}
+                id="add-student-btn"
+                onClick={handleOpenModal}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="8.5" cy="7" r="4" />
+                  <line x1="20" y1="8" x2="20" y2="14" />
+                  <line x1="23" y1="11" x2="17" y2="11" />
+                </svg>
+                เพิ่มนักเรียน
+              </button>
+            </div>
           </div>
 
           {/* Stats */}
@@ -189,9 +236,15 @@ export default function ManageStudentsPage() {
               <span className={styles.statValue}>{isLoading ? '—' : enrollments.length}</span>
               <span className={styles.statLabel}>นักเรียนทั้งหมด</span>
             </div>
+            {sections.length > 0 && (
+              <div className={styles.statCard}>
+                <span className={styles.statValue}>{sections.length}</span>
+                <span className={styles.statLabel}>ห้องเรียน</span>
+              </div>
+            )}
           </div>
 
-          {/* Search */}
+          {/* Search & Filter Row */}
           <div className={styles.searchRow}>
             <div className={styles.searchBox}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={styles.searchIcon}>
@@ -207,6 +260,20 @@ export default function ManageStudentsPage() {
                 id="search-student"
               />
             </div>
+            {/* Section filter */}
+            {sections.length > 0 && (
+              <select
+                className={styles.filterSelect}
+                value={filterSection}
+                onChange={(e) => setFilterSection(e.target.value)}
+                id="filter-section"
+              >
+                <option value="">ทุกห้อง</option>
+                {sections.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            )}
           </div>
 
           {/* Student List */}
@@ -230,8 +297,8 @@ export default function ManageStudentsPage() {
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
                 <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
-              <p>{search ? 'ไม่พบนักเรียนที่ค้นหา' : 'ยังไม่มีนักเรียนในรายวิชานี้'}</p>
-              {!search && (
+              <p>{search || filterSection ? 'ไม่พบนักเรียนที่ค้นหา' : 'ยังไม่มีนักเรียนในรายวิชานี้'}</p>
+              {!search && !filterSection && (
                 <button className={styles.emptyAddBtn} onClick={handleOpenModal}>
                   เพิ่มนักเรียนคนแรก
                 </button>
@@ -245,6 +312,7 @@ export default function ManageStudentsPage() {
                 const initials = [s.name?.[0], s.sureName?.[0]].filter(Boolean).join('').toUpperCase() || '?';
                 const colors = ['#6366f1', '#8b5cf6', '#06b6d4', '#f59e0b', '#10b981', '#ec4899'];
                 const color = colors[idx % colors.length];
+                const classroom = classroomLabel(s.studentProfile);
                 return (
                   <div key={enrollment.id} className={styles.studentCard} id={`student-card-${s.id}`}>
                     <div className={styles.avatarWrap} style={{ background: `${color}22`, borderColor: `${color}44` }}>
@@ -253,6 +321,16 @@ export default function ManageStudentsPage() {
                     <div className={styles.studentInfo}>
                       <p className={styles.studentName}>{fullName}</p>
                       <p className={styles.studentEmail}>{s.email}</p>
+                      {/* Classroom badge */}
+                      {classroom && (
+                        <span className={styles.classroomBadge}>
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                            <polyline points="9 22 9 12 15 12 15 22" />
+                          </svg>
+                          {classroom}
+                        </span>
+                      )}
                     </div>
                     <div className={styles.enrolledDate}>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -311,7 +389,9 @@ export default function ManageStudentsPage() {
                 </option>
                 {availableStudents.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {[s.name, s.sureName].filter(Boolean).join(' ') || s.email} ({s.email})
+                    {[s.name, s.sureName].filter(Boolean).join(' ') || s.email}
+                    {s.studentProfile?.section ? ` (${s.studentProfile.section}${s.studentProfile.room ? ` ห้อง ${s.studentProfile.room}` : ''})` : ''}
+                    {' '}– {s.email}
                   </option>
                 ))}
               </select>
@@ -320,9 +400,7 @@ export default function ManageStudentsPage() {
             {addError && (
               <div className={styles.msgError}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="15" y1="9" x2="9" y2="15" />
-                  <line x1="9" y1="9" x2="15" y2="15" />
+                  <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
                 </svg>
                 {addError}
               </div>
@@ -330,25 +408,21 @@ export default function ManageStudentsPage() {
             {addSuccess && (
               <div className={styles.msgSuccess}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                  <polyline points="22 4 12 14.01 9 11.01" />
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
                 </svg>
                 {addSuccess}
               </div>
             )}
 
             <div className={styles.modalActions}>
-              <button className={styles.cancelBtn} onClick={() => setIsModalOpen(false)} disabled={isAdding}>
-                ยกเลิก
-              </button>
+              <button className={styles.cancelBtn} onClick={() => setIsModalOpen(false)} disabled={isAdding}>ยกเลิก</button>
               <button className={styles.submitBtn} onClick={handleAddStudent} disabled={isAdding || !selectedStudentId} id="confirm-add-student-btn">
                 {isAdding ? (
                   <><span className={styles.spinner} /> กำลังเพิ่ม...</>
                 ) : (
                   <>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="12" y1="5" x2="12" y2="19" />
-                      <line x1="5" y1="12" x2="19" y2="12" />
+                      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                     </svg>
                     เพิ่มนักเรียน
                   </>
@@ -357,6 +431,14 @@ export default function ManageStudentsPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── Import CSV Modal ── */}
+      {isCSVModalOpen && (
+        <ImportCSVModal
+          onClose={() => setIsCSVModalOpen(false)}
+          onImported={fetchData}
+        />
       )}
     </div>
   );

@@ -46,3 +46,26 @@ export const createUser = async (data: any) => {
     throw err;
   }
 };
+
+// ─── Student CSV Import ──────────────────────────────────────
+
+export interface ImportCSVResult {
+  imported: number;
+  skipped: number;
+  errors: { row: number; studentId: string; reason: string }[];
+}
+
+export const importStudentsCSV = async (csvText: string): Promise<ImportCSVResult> => {
+  try {
+    const request = await axiosInstance.post(`${PAGE_PATH.API_URL}/students/import-csv`, {
+      csv: csvText,
+    });
+    return request.data.data as ImportCSVResult;
+  } catch (err) {
+    console.log(err);
+    throw err;
+  }
+};
+
+export const getStudentCSVExampleUrl = (): string =>
+  `${PAGE_PATH.API_URL}/students/import-csv/example`;

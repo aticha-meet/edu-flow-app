@@ -45,10 +45,12 @@ model TeacherProfile {
 
 // 🧑‍🎓 ตารางเก็บข้อมูลเฉพาะของนักเรียน
 model StudentProfile {
-  id        String @id @default(uuid())
-  userId    String @unique
-  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  studentId String @unique // รหัสนักเรียน (ใส่เฉพาะตารางนี้ ครูจะไม่มีฟิลด์นี้แน่นอน)
+  id        String  @id @default(uuid())
+  userId    String  @unique
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  studentId String  @unique  // รหัสนักเรียน
+  section   String?           // ระดับชั้น เช่น "ปวส.1", "ปวช.2", "ม.6"
+  room      Int?              // ห้องเลข เช่น 2 → หมายถึง ห้อง 2
 }
 
 enum Role {
