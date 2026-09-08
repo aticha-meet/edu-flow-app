@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 @theme base {
-  --font-google-sans-flex: 'Google Sans Flex', sans-serif;
+  --font-google-sans-flex: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', sans-serif;
 }
 
 @layer base {

@@ -1,13 +1,5 @@
 import { ClientProvider } from '@/components/ClientProvider';
 import './global.css';
-import { Google_Sans_Flex } from 'next/font/google';
-
-const googleSansFlex = Google_Sans_Flex({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800', '900'],
-  variable: '--font-google-sans-flex',
-  adjustFontFallback: true,
-});
 
 export const metadata = {
   title: 'Welcome to Edu-Flow',
@@ -21,7 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${googleSansFlex.variable}`}>
+      <body>
         <ClientProvider>
           {children}
         </ClientProvider>
