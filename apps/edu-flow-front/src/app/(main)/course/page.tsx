@@ -1,369 +1,101 @@
 'use client';
-import { useEffect, useState } from 'react';
-import styles from './course.module.scss';
-import { getListCourse } from '@/api/course/controller';
-import { CreateClassPopup } from '@/components/course/CreateClassPopup';
+
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getListCourse } from '@/api/course/controller';
+import { CourseCatalog } from '@/components/course/catalog/CourseCatalog';
+import type { CourseStatus, CourseSummary } from '@/components/course/catalog/types';
+import { CreateClassPopup } from '@/components/course/CreateClassPopup';
 import { useRoleGuard } from '@/utils/useRoleGuard';
+import styles from './course.module.scss';
 
-// ─── Types ───────────────────────────────────────────────────────
-interface ClassItem {
-  id: number;
-  code: string | null;
+type CourseForm = {
   className: string;
-  description: string | null;
+  description: string;
   teacherId: string;
-  roomId: string | null;
+  roomId: string;
+  code: string;
   maxStudents: number;
-  status: 'active' | 'upcoming' | 'complete';
-  createdAt: string;
-  updatedAt: string;
-  teacher: { name: string | null; sureName: string | null };
-  _count: { enrollments: number };
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────
-const CLASS_COLORS = [
-  '#6366f1',
-  '#8b5cf6',
-  '#06b6d4',
-  '#f59e0b',
-  '#10b981',
-  '#ec4899',
-  '#ef4444',
-  '#14b8a6',
-];
-const getClassColor = (id: number) => CLASS_COLORS[id % CLASS_COLORS.length];
-
-const getInstructor = (cls: ClassItem) =>
-  [cls.teacher?.name, cls.teacher?.sureName].filter(Boolean).join(' ') ||
-  'ไม่ระบุ';
-
-// ─── Helpers ──────────────────────────────────────────────────────
-const STATUS_LABEL: Record<ClassItem['status'], string> = {
-  active: 'กำลังเรียน',
-  upcoming: 'เร็วๆ นี้',
-  complete: 'เสร็จสิ้น',
+  status: CourseStatus;
 };
+
+const emptyCourseForm = (teacherId = ''): CourseForm => ({
+  className: '',
+  description: '',
+  teacherId,
+  roomId: '',
+  code: '',
+  maxStudents: 50,
+  status: 'upcoming',
+});
 
 export default function ClassPage() {
   const router = useRouter();
-
   const { session } = useRoleGuard(['TEACHER', 'ADMIN', 'STUDENT'], '/login');
-  // Note: we can allow everyone on the main course list, so maybe just use useSession?
-  // Let's use useRoleGuard with all roles to ensure login.
-
-  const [classes, setClasses] = useState<ClassItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [filter, setFilter] = useState<'all' | ClassItem['status']>('all');
-
-  // ─── Create Class Modal State ─────────────────────────────────
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    className: '',
-    description: '',
-    teacherId: '',
-    roomId: '',
-    code: '',
-    maxStudents: 50,
-    status: 'upcoming' as 'upcoming' | 'active' | 'complete',
-  });
-  const [formError, setFormError] = useState('');
-  const [formSuccess, setFormSuccess] = useState('');
-
-  // ─── Check if user can create course (ADMIN or TEACHER) ────────
   const user = session?.user as any;
   const canCreateCourse = user?.role === 'ADMIN' || user?.role === 'TEACHER';
 
-  const fetchClasses = async () => {
+  const [courses, setCourses] = useState<CourseSummary[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [status, setStatus] = useState<'all' | CourseStatus>('all');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState<CourseForm>(() => emptyCourseForm());
+  const [formError, setFormError] = useState('');
+  const [formSuccess, setFormSuccess] = useState('');
+
+  const fetchCourses = useCallback(async () => {
     if (!user?.id) return;
     setIsLoading(true);
     try {
-      const data = await getListCourse(
-        '/course',
-        {},
-        {
-          userId: user.id,
-          role: user.role,
-        },
-      );
-      setClasses(data);
-    } catch (err) {
-      console.error('Error fetching classes:', err);
+      const data = await getListCourse('/course', {}, {});
+      setCourses(data);
+    } catch (error) {
+      console.error('Error fetching classes:', error);
+      setCourses([]);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  useEffect(() => {
-    if (user?.id) {
-      fetchClasses();
-    }
   }, [user?.id]);
 
-  // ─── Create Class Handlers ────────────────────────────────────
-  const handleOpenModal = () => {
-    setFormData({
-      className: '',
-      description: '',
-      teacherId: user?.id || '',
-      roomId: '',
-      code: '',
-      maxStudents: 50,
-      status: 'upcoming',
-    });
+  useEffect(() => { void fetchCourses(); }, [fetchCourses]);
+
+  const openCreateModal = () => {
+    setFormData(emptyCourseForm(user?.id));
     setFormError('');
     setFormSuccess('');
     setIsModalOpen(true);
   };
 
-  const filtered =
-    filter === 'all' ? classes : classes.filter((c) => c.status === filter);
-  const totalStudents = classes.reduce((s, c) => s + c._count.enrollments, 0);
-  const activeCount = classes.filter((c) => c.status === 'active').length;
+  const activeCount = courses.filter((course) => course.status === 'active').length;
+  const totalStudents = courses.reduce((sum, course) => sum + course._count.enrollments, 0);
 
   return (
     <div className={styles.page}>
       <main className={styles.main}>
-        {/* ── Header ── */}
-        <div className={styles.header}>
+        <header className={styles.header}>
           <div className={styles.headerLeft}>
             <h1 className={styles.title}>ห้องเรียนของฉัน</h1>
-            <p className={styles.subtitle}>
-              จัดการและดูรายละเอียดรายวิชาทั้งหมด
-            </p>
+            <p className={styles.subtitle}>จัดการและดูรายละเอียดรายวิชาทั้งหมด</p>
           </div>
-          {canCreateCourse && (
-            <button
-              className={styles.addBtn}
-              id="add-class-btn"
-              onClick={handleOpenModal}
-            >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-              เพิ่มรายวิชา
-            </button>
-          )}
-        </div>
+          {canCreateCourse && <button className={styles.addBtn} id="add-class-btn" onClick={openCreateModal}>เพิ่มรายวิชา</button>}
+        </header>
 
-        {/* ── Stats ── */}
-        <div className={styles.statsRow}>
-          <div className={styles.statCard}>
-            <span className={styles.statValue}>
-              {isLoading ? '—' : classes.length}
-            </span>
-            <span className={styles.statLabel}>รายวิชาทั้งหมด</span>
-          </div>
-          <div className={styles.statCard}>
-            <span className={styles.statValue}>
-              {isLoading ? '—' : activeCount}
-            </span>
-            <span className={styles.statLabel}>กำลังเรียน</span>
-          </div>
-          <div className={styles.statCard}>
-            <span className={styles.statValue}>
-              {isLoading ? '—' : totalStudents.toLocaleString()}
-            </span>
-            <span className={styles.statLabel}>นักศึกษารวม</span>
-          </div>
-        </div>
+        <section className={styles.statsRow} aria-label="สรุปรายวิชา">
+          <Stat label="รายวิชาทั้งหมด" value={isLoading ? '—' : courses.length} />
+          <Stat label="กำลังเรียน" value={isLoading ? '—' : activeCount} />
+          <Stat label="นักศึกษารวม" value={isLoading ? '—' : totalStudents.toLocaleString()} />
+        </section>
 
-        {/* ── Filter Tabs ── */}
-        <div className={styles.filterRow}>
-          {(['all', 'active', 'upcoming', 'complete'] as const).map((f) => (
-            <button
-              key={f}
-              id={`filter-${f}`}
-              className={`${styles.filterTab} ${filter === f ? styles.filterTabActive : ''}`}
-              onClick={() => setFilter(f)}
-            >
-              {f === 'all' ? 'ทั้งหมด' : STATUS_LABEL[f]}
-            </button>
-          ))}
-        </div>
-
-        {/* ── Class Grid ── */}
-        {isLoading ? (
-          <div className={styles.skeletonGrid}>
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className={styles.skeletonCard}>
-                <div
-                  className={styles.skeletonBar}
-                  style={{ width: '60%', height: 12 }}
-                />
-                <div
-                  className={styles.skeletonBar}
-                  style={{ width: '90%', height: 20, marginTop: 12 }}
-                />
-                <div
-                  className={styles.skeletonBar}
-                  style={{ width: '75%', height: 12, marginTop: 8 }}
-                />
-                <div
-                  className={styles.skeletonBar}
-                  style={{ width: '50%', height: 12, marginTop: 24 }}
-                />
-                <div
-                  className={styles.skeletonBar}
-                  style={{ width: '100%', height: 8, marginTop: 16 }}
-                />
-              </div>
-            ))}
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className={styles.empty}>
-            <svg
-              width="48"
-              height="48"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              opacity={0.3}
-            >
-              <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-              <path d="M6 12v5c3 3 9 3 12 0v-5" />
-            </svg>
-            <p>ไม่พบรายวิชาในหมวดนี้</p>
-          </div>
-        ) : (
-          <div className={styles.grid}>
-            {filtered.map((cls) => (
-              <div
-                key={cls.id}
-                className={styles.card}
-                id={`class-card-${cls.id}`}
-              >
-                {/* Color accent bar */}
-                <div
-                  className={styles.cardAccent}
-                  style={{ background: getClassColor(cls.id) }}
-                />
-
-                <div className={styles.cardBody}>
-                  {/* Top row */}
-                  <div className={styles.cardTop}>
-                    <span
-                      className={styles.classCode}
-                      style={{ color: getClassColor(cls.id) }}
-                    >
-                      {cls.code || '-'}
-                    </span>
-                    <span
-                      className={`${styles.badge} ${styles[`badge_${cls.status}`]}`}
-                    >
-                      {STATUS_LABEL[cls.status]}
-                    </span>
-                  </div>
-
-                  {/* Name */}
-                  <h2 className={styles.className}>{cls.className}</h2>
-
-                  {/* Instructor */}
-                  <p className={styles.instructor}>
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
-                    {getInstructor(cls)}
-                  </p>
-
-                  <div className={styles.infoGrid}>
-                    <div className={styles.infoItem}>
-                      <svg
-                        width="13"
-                        height="13"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                        <polyline points="9 22 9 12 15 12 15 22" />
-                      </svg>
-                      {cls.roomId || 'ไม่ระบุ'}
-                    </div>
-                  </div>
-
-                  {/* Progress bar */}
-                  <div className={styles.progressSection}>
-                    <div className={styles.progressLabel}>
-                      <span>นักศึกษา</span>
-                      <span style={{ color: getClassColor(cls.id) }}>
-                        {cls._count.enrollments} / {cls.maxStudents}
-                      </span>
-                    </div>
-                    <div className={styles.progressTrack}>
-                      <div
-                        className={styles.progressFill}
-                        style={{
-                          width: `${(cls._count.enrollments / cls.maxStudents) * 100}%`,
-                          background: getClassColor(cls.id),
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div className={styles.cardFooter}>
-                  <button
-                    className={styles.detailBtn}
-                    onClick={() => router.push(`/course/${cls.id}`)}
-                    style={
-                      {
-                        '--accent': getClassColor(cls.id),
-                      } as React.CSSProperties
-                    }
-                  >
-                    ดูรายละเอียด
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <line x1="5" y1="12" x2="19" y2="12" />
-                      <polyline points="12 5 19 12 12 19" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <CourseCatalog
+          courses={courses}
+          status={status}
+          isLoading={isLoading}
+          onStatusChange={setStatus}
+          onOpenCourse={(courseId) => router.push(`/course/${courseId}`)}
+        />
       </main>
 
-      {/* ── Create Class Modal (Admin Only) ── */}
       {isModalOpen && (
         <CreateClassPopup
           styles={styles}
@@ -374,11 +106,15 @@ export default function ClassPage() {
           setIsSubmitting={setIsSubmitting}
           isSubmitting={isSubmitting}
           formData={formData}
-          fetchClasses={fetchClasses}
+          fetchClasses={fetchCourses}
           formError={formError}
           formSuccess={formSuccess}
         />
       )}
     </div>
   );
+}
+
+function Stat({ label, value }: { label: string; value: string | number }) {
+  return <div className={styles.statCard}><span className={styles.statValue}>{value}</span><span className={styles.statLabel}>{label}</span></div>;
 }

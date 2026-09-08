@@ -359,6 +359,19 @@
     padding: 22px;
 }
 
+.syllabusLoading,
+.settingsLoading {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 24px 0;
+}
+
+.syllabusLoading .skeletonLine,
+.settingsLoading .skeletonLine {
+    height: 52px;
+}
+
 /* ─── Assignment Panel ───────────────────────────────────────── */
 .assignmentList {
     display: flex;

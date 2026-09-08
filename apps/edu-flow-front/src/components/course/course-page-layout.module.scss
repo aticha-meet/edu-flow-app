@@ -1,0 +1,67 @@
+.page {
+  min-height: 100vh;
+  background: #0b0f1a;
+  color: #f1f5f9;
+}
+
+.layout {
+  display: flex;
+  min-height: calc(100vh - 64px);
+}
+
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  background: #0d1220;
+}
+
+.skeletonBanner {
+  height: 120px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 25%,
+    rgba(255, 255, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0.03) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  max-width: 1200px;
+  padding: 32px 36px 60px;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .content {
+    padding: 24px 20px 48px;
+  }
+}
+
+@media (max-width: 600px) {
+  .content {
+    padding: 20px 16px 40px;
+  }
+}

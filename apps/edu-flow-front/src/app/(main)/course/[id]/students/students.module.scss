@@ -745,27 +745,99 @@
    New: Filter Select
 ───────────────────────────────────────────────────────────── */
 .filterSelect {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 9px;
-  padding: 9px 32px 9px 14px;
-  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 142px;
+  height: 42px;
+  padding: 0 12px 0 14px;
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.96));
+  border: 1px solid rgba(129, 140, 248, 0.38);
+  border-radius: 10px;
+  color: #e2e8f0;
+  font: inherit;
   font-size: 0.83rem;
-  font-family: inherit;
+  font-weight: 650;
   cursor: pointer;
-  transition: border-color 0.15s;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  height: 38px;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.04);
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
 }
-.filterSelect:focus {
+
+.filterSelect:hover,
+.filterSelect[aria-expanded='true'] {
+  background: linear-gradient(145deg, rgba(49, 46, 129, 0.45), rgba(30, 41, 59, 0.96));
+  border-color: rgba(165, 180, 252, 0.78);
+}
+
+.filterSelect:focus-visible {
   outline: none;
-  border-color: rgba(99, 102, 241, 0.45);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
-.filterSelect option {
-  background: #0f172a;
+
+.filterChevron {
+  flex-shrink: 0;
+  color: #a5b4fc;
+  transition: transform 0.18s ease;
+}
+
+.filterSelect[aria-expanded='true'] .filterChevron {
+  transform: rotate(180deg);
+}
+
+.sectionDropdown {
+  position: relative;
+  z-index: 5;
+}
+
+.filterMenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 100%;
+  overflow: hidden;
+  padding: 6px;
+  border: 1px solid rgba(129, 140, 248, 0.34);
+  border-radius: 12px;
+  background: #111827;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.42);
+  animation: filterMenuIn 0.16s ease both;
+}
+
+@keyframes filterMenuIn {
+  from { opacity: 0; transform: translateY(-5px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.filterOption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #cbd5e1;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s;
+}
+
+.filterOption:hover,
+.filterOption[data-selected='true'] {
+  background: rgba(99, 102, 241, 0.18);
+  color: #eef2ff;
+}
+
+.optionCheck {
+  margin-left: 14px;
+  color: #a5b4fc;
+  font-size: 0.95rem;
 }
 
 /* Multi-student picker */

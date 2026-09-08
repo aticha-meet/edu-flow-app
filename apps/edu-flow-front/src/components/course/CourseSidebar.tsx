@@ -25,7 +25,6 @@ interface CourseSidebarProps {
   courseName: string;
   activeMenu: MenuKey;
   userRole?: 'TEACHER' | 'ADMIN' | 'STUDENT';
-  onMenuChange: (key: MenuKey) => void;
 }
 
 const MenuIcon = ({ name }: { name: string }) => {
@@ -152,11 +151,8 @@ export const CourseSidebar = ({
   courseName,
   activeMenu,
   userRole,
-  onMenuChange,
 }: CourseSidebarProps) => {
   const router = useRouter();
-
-  console.log(userRole);
 
   const menuItems: MenuItem[] = [
     {
@@ -218,24 +214,16 @@ export const CourseSidebar = ({
                 id={`sidebar-${item.key}`}
                 className={`${styles.navBtn} ${activeMenu === item.key ? styles.active : ''}`}
                 onClick={() => {
-                  if (item.key === 'test') {
-                    router.push(`/course/${courseId}/test`);
-                    return;
-                  }
-                  if (item.key === 'test-manage') {
-                    router.push(`/course/${courseId}/test/manage`);
-                    return;
-                  }
-                  if (item.key === 'test-dashboard') {
-                    router.push(`/course/${courseId}/test/dashboard`);
-                    return;
-                  }
-                  if (item.key === 'manage-students') {
-                    router.push(`/course/${courseId}/students`);
-                    return;
-                  }
+                  const routes: Record<MenuKey, string> = {
+                    syllabus: `/course/${courseId}`,
+                    test: `/course/${courseId}/test`,
+                    'test-manage': `/course/${courseId}/test/manage`,
+                    'test-dashboard': `/course/${courseId}/test/dashboard`,
+                    'manage-students': `/course/${courseId}/students`,
+                    settings: `/course/${courseId}/settings`,
+                  };
 
-                  onMenuChange(item.key);
+                  router.push(routes[item.key]);
                 }}
                 aria-current={activeMenu === item.key ? 'page' : undefined}
               >

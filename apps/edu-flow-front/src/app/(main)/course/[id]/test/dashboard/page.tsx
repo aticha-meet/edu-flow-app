@@ -73,9 +73,6 @@ export default function TestDashboardListPage() {
             courseName={courseName}
             activeMenu="test-dashboard"
             userRole={user?.role}
-            onMenuChange={(menu) => {
-              if (menu === 'syllabus') router.push(`/course/${courseId}`);
-            }}
           />
         )}
 

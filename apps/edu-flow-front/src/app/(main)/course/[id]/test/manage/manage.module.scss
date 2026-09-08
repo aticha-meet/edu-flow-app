@@ -110,26 +110,21 @@
 .addButton {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 9px 18px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: #ffffff;
-  border: none;
-  border-radius: 10px;
-  font-size: 0.85rem;
+  padding: 8px 13px;
+  background: #6366f1;
+  color: #fff;
+  border: 1px solid #6366f1;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
-  }
-
-  &:active {
-    transform: translateY(0);
+    background: #4f46e5;
+    border-color: #4f46e5;
   }
 }
 
