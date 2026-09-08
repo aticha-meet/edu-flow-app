@@ -148,6 +148,12 @@ export class UserController {
   async createUser(req: Request, res: Response) {
     try {
       const { name, sureName, email, role } = req.body;
+      if (role !== 'STUDENT' && role !== 'TEACHER') {
+        return res.status(400).json({ message: 'role must be STUDENT or TEACHER' });
+      }
+      if (req.authUser?.role === 'TEACHER' && role !== 'STUDENT') {
+        return res.status(403).json({ message: 'TEACHER can only create students' });
+      }
       const user = await userService.create({ name, sureName, email, role });
       return res
         .status(201)

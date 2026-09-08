@@ -59,10 +59,9 @@ export class TestController {
    */
   async createTest(req: Request, res: Response) {
     try {
-      const { title, courseId, createdById, durationMinutes, questions } = req.body as {
+      const { title, courseId, durationMinutes, questions } = req.body as {
         title: string;
         courseId: string;
-        createdById: string;
         durationMinutes?: number;
         questions: Array<{
           questionText: string;
@@ -76,9 +75,9 @@ export class TestController {
       };
 
       // Validate required fields
-      if (!title || !courseId || !createdById) {
+      if (!title || !courseId || !req.authUser) {
         return res.status(400).json({
-          message: 'title, courseId, and createdById are required',
+          message: 'title and courseId are required',
         });
       }
 
@@ -114,7 +113,7 @@ export class TestController {
       const test = await testService.create({
         title,
         courseId,
-        createdById,
+        createdById: req.authUser.id,
         durationMinutes: duration,
         questions,
       });

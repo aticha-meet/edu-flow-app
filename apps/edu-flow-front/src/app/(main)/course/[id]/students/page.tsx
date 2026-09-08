@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useRoleGuard } from '@/utils/useRoleGuard';
@@ -8,13 +8,20 @@ import {
   getListCourse,
   getEnrollments,
   addEnrollments,
+  removeEnrollment,
 } from '@/api/course/controller';
-import { getListUsers, getStudentClassrooms } from '@/api/user/controller';
+import {
+  getListUsers,
+  getStudentClassrooms,
+  updateStudent,
+} from '@/api/user/controller';
 import { CourseSidebar } from '@/components/course/CourseSidebar';
 import { ImportCSVModal } from '@/components/course/ImportCSVModal';
 import styles from './students.module.scss';
+import { useToast } from '@/components/ToastProvider';
 
 interface StudentProfile {
+  studentId: string;
   section: string | null;
   room: number | null;
 }
@@ -41,6 +48,8 @@ export default function ManageStudentsPage() {
   const params = useParams();
   const id = params?.id as string;
   const router = useRouter();
+  const notify = useToast();
+  const requestVersion = useRef(0);
 
   const { session } = useRoleGuard(['TEACHER', 'ADMIN'], '/course');
   const userRole = (session?.user as any)?.role as
@@ -50,6 +59,11 @@ export default function ManageStudentsPage() {
 
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [enrollments, setEnrollments] = useState<StudentItem[]>([]);
+  const [studentCount, setStudentCount] = useState<number | null>(null);
+  const [resultCount, setResultCount] = useState<number | null>(null);
+  const [availableCount, setAvailableCount] = useState<number | null>(null);
+  const [courseSections, setCourseSections] = useState<string[]>([]);
+  const [studentsRevision, setStudentsRevision] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   // Add student modal state
@@ -67,6 +81,21 @@ export default function ManageStudentsPage() {
   const [addError, setAddError] = useState('');
   const [addSuccess, setAddSuccess] = useState('');
 
+  // Edit/remove student state
+  const [editingStudent, setEditingStudent] = useState<StudentItem['student'] | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    sureName: '',
+    email: '',
+    studentId: '',
+    section: '',
+    room: '',
+  });
+  const [editError, setEditError] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [deletingStudentId, setDeletingStudentId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState('');
+
   // CSV Import modal
   const [isCSVModalOpen, setIsCSVModalOpen] = useState(false);
 
@@ -76,23 +105,46 @@ export default function ManageStudentsPage() {
 
   const fetchData = useCallback(async () => {
     if (!id) return;
+    const version = ++requestVersion.current;
     setIsLoading(true);
+    setActionError('');
     try {
       const [courseData, enrollData] = await Promise.all([
         getListCourse(`/course/${id}`, {}, {}),
-        getEnrollments(id),
+        getEnrollments(id, { search: search.trim() || undefined, section: filterSection || undefined }),
       ]);
+      if (version !== requestVersion.current) return;
       setCourse(courseData);
-      setEnrollments(enrollData || []);
+      setEnrollments(enrollData.users);
+      setStudentCount(enrollData.totalCount);
+      setResultCount(enrollData.count);
+      setCourseSections(enrollData.sections);
     } catch (err) {
-      console.error(err);
+      if (version === requestVersion.current) {
+        setStudentCount(null);
+        setResultCount(null);
+        setActionError('โหลดรายชื่อนักเรียนไม่สำเร็จ กรุณาลองใหม่');
+      }
     } finally {
-      setIsLoading(false);
+      if (version === requestVersion.current) setIsLoading(false);
     }
-  }, [id]);
+  }, [id, search, filterSection]);
 
   useEffect(() => {
-    fetchData();
+    const timer = window.setTimeout(fetchData, 250);
+    const refresh = () => {
+      setStudentsRevision((value) => value + 1);
+      setClassroomOptions([]);
+      void fetchData();
+    };
+    window.addEventListener('focus', refresh);
+    window.addEventListener('students-updated', refresh);
+    return () => {
+      window.clearTimeout(timer);
+      ++requestVersion.current;
+      window.removeEventListener('focus', refresh);
+      window.removeEventListener('students-updated', refresh);
+    };
   }, [fetchData]);
 
   const handleOpenModal = () => {
@@ -118,9 +170,16 @@ export default function ManageStudentsPage() {
           room: studentRoom || undefined,
           search: studentSearch.trim() || undefined,
         });
-        if (!cancelled) setAllStudents(res.data.users || []);
+        if (!cancelled) {
+          setAllStudents(res.data.users);
+          setAvailableCount(res.data.count);
+        }
       } catch {
-        if (!cancelled) setAllStudents([]);
+        if (!cancelled) {
+          setAllStudents([]);
+          setAvailableCount(null);
+          setAddError('โหลดรายชื่อนักเรียนไม่สำเร็จ กรุณาลองใหม่');
+        }
       } finally {
         if (!cancelled) setIsLoadingStudents(false);
       }
@@ -130,7 +189,7 @@ export default function ManageStudentsPage() {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [id, isModalOpen, studentRoom, studentSearch, studentSection]);
+  }, [id, isModalOpen, studentRoom, studentSearch, studentSection, studentsRevision]);
 
   useEffect(() => {
     if (!isModalOpen || classroomOptions.length > 0) return;
@@ -148,6 +207,7 @@ export default function ManageStudentsPage() {
     setAddError('');
     try {
       const result = await addEnrollments(id, selectedStudentIds);
+      notify(result.added > 0 ? `เพิ่มนักเรียนสำเร็จ ${result.added} คน` : 'ไม่มีนักเรียนที่ถูกเพิ่มใหม่', result.added > 0 ? 'success' : 'info');
       await fetchData();
       setAddSuccess(`เพิ่มนักเรียนสำเร็จ ${result.added} คน`);
       setTimeout(() => {
@@ -162,11 +222,82 @@ export default function ManageStudentsPage() {
     }
   };
 
+  const canManageStudents = userRole === 'TEACHER' || userRole === 'ADMIN';
+
+  const handleOpenEdit = (student: StudentItem['student']) => {
+    setEditingStudent(student);
+    setEditError('');
+    setActionError('');
+    setEditForm({
+      name: student.name ?? '',
+      sureName: student.sureName ?? '',
+      email: student.email,
+      studentId: student.studentProfile?.studentId ?? '',
+      section: student.studentProfile?.section ?? '',
+      room: student.studentProfile?.room ? String(student.studentProfile.room) : '',
+    });
+  };
+
+  const handleUpdateStudent = async () => {
+    if (!editingStudent) return;
+    if (!editForm.name.trim() || !editForm.email.trim() || !editForm.studentId.trim()) {
+      setEditError('กรุณากรอกชื่อ อีเมล และรหัสนักเรียนให้ครบถ้วน');
+      return;
+    }
+    if (editForm.room && (!/^\d+$/.test(editForm.room) || Number(editForm.room) < 1)) {
+      setEditError('ห้องต้องเป็นเลขจำนวนเต็มที่มากกว่า 0');
+      return;
+    }
+
+    setIsUpdating(true);
+    setEditError('');
+    try {
+      await updateStudent(editingStudent.id, {
+        name: editForm.name.trim(),
+        sureName: editForm.sureName.trim(),
+        email: editForm.email.trim(),
+        studentId: editForm.studentId.trim(),
+        section: editForm.section.trim(),
+        room: editForm.room ? Number(editForm.room) : null,
+      });
+      notify('แก้ไขข้อมูลนักเรียนสำเร็จ');
+      setClassroomOptions([]);
+      await fetchData();
+      setEditingStudent(null);
+    } catch (err: any) {
+      setEditError(err?.response?.data?.message || 'แก้ไขข้อมูลนักเรียนไม่สำเร็จ');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleRemoveStudent = async (student: StudentItem['student']) => {
+    if (!window.confirm(`ต้องการนำ ${[student.name, student.sureName].filter(Boolean).join(' ')} ออกจากรายวิชานี้หรือไม่?`)) {
+      return;
+    }
+
+    setDeletingStudentId(student.id);
+    setActionError('');
+    try {
+      await removeEnrollment(id, student.id);
+      notify('นำนักเรียนออกจากรายวิชาสำเร็จ');
+      await fetchData();
+    } catch (err: any) {
+      setActionError(err?.response?.data?.message || 'นำออกจากรายวิชาไม่สำเร็จ');
+    } finally {
+      setDeletingStudentId(null);
+    }
+  };
+
   const courseCode = course?.code ?? `COURSE-${id}`;
   const courseName = course?.className ?? 'รายวิชา';
 
+  // Inactive client filtering; retained pending approval to remove.
+  /*
   const enrolledIds = new Set(enrollments.map((e) => e.student.id));
   const availableStudents = allStudents.filter((s) => !enrolledIds.has(s.id));
+  */
+  const availableStudents = allStudents;
 
   const modalSections = Array.from(
     new Set(
@@ -214,6 +345,8 @@ export default function ManageStudentsPage() {
   };
 
   // ดึง unique sections สำหรับ filter dropdown
+  // Inactive client filtering; retained pending approval to remove.
+  /*
   const sections = Array.from(
     new Set(
       enrollments
@@ -235,6 +368,8 @@ export default function ManageStudentsPage() {
       : true;
     return matchSearch && matchSection;
   });
+  */
+  const filtered = enrollments;
 
   // สร้าง label ห้องเรียน
   const classroomLabel = (profile?: StudentProfile | null) => {
@@ -351,17 +486,19 @@ export default function ManageStudentsPage() {
             </div>
           </div>
 
+          {actionError && <div className={styles.msgError}>{actionError}</div>}
+
           {/* Stats */}
           <div className={styles.statsRow}>
             <div className={styles.statCard}>
               <span className={styles.statValue}>
-                {isLoading ? '—' : enrollments.length}
+                {isLoading ? '—' : studentCount ?? '—'}
               </span>
               <span className={styles.statLabel}>นักเรียนทั้งหมด</span>
             </div>
-            {sections.length > 0 && (
+            {courseSections.length > 0 && (
               <div className={styles.statCard}>
-                <span className={styles.statValue}>{sections.length}</span>
+                <span className={styles.statValue}>{courseSections.length}</span>
                 <span className={styles.statLabel}>ห้องเรียน</span>
               </div>
             )}
@@ -394,7 +531,7 @@ export default function ManageStudentsPage() {
               />
             </div>
             {/* Section filter */}
-            {sections.length > 0 && (
+            {courseSections.length > 0 && (
               <select
                 className={styles.filterSelect}
                 value={filterSection}
@@ -402,7 +539,7 @@ export default function ManageStudentsPage() {
                 id="filter-section"
               >
                 <option value="">ทุกห้อง</option>
-                {sections.map((s) => (
+                {courseSections.map((s) => (
                   <option key={s} value={s}>
                     {s}
                   </option>
@@ -411,6 +548,9 @@ export default function ManageStudentsPage() {
             )}
           </div>
 
+          {(search || filterSection) && !isLoading && resultCount !== null && (
+            <p className={styles.selectionCount}>พบ {resultCount} คน</p>
+          )}
           {/* Student List */}
           {isLoading ? (
             <div className={styles.studentGrid}>
@@ -551,6 +691,39 @@ export default function ManageStudentsPage() {
                         { day: 'numeric', month: 'short', year: 'numeric' },
                       )}
                     </div>
+                    {canManageStudents && (
+                      <div className={styles.studentActions}>
+                        <button
+                          type="button"
+                          className={styles.editStudentBtn}
+                          onClick={() => handleOpenEdit(s)}
+                          aria-label={`แก้ไขข้อมูล ${fullName}`}
+                          title="แก้ไขข้อมูลนักเรียน"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.deleteStudentBtn}
+                          onClick={() => handleRemoveStudent(s)}
+                          disabled={deletingStudentId === s.id}
+                          aria-label={`นำ ${fullName} ออกจากรายวิชา`}
+                          title="นำออกจากรายวิชา"
+                        >
+                          {deletingStudentId === s.id ? (
+                            <span className={styles.spinner} />
+                          ) : (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="3 6 5 6 21 6" />
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -621,7 +794,7 @@ export default function ManageStudentsPage() {
                   <p className={styles.formLabel}>เลือกนักเรียน</p>
                   <p className={styles.selectionCount}>
                     เลือกแล้ว {selectedStudentIds.length} จาก{' '}
-                    {availableStudents.length} คน
+                    {isLoadingStudents ? '…' : availableCount ?? '—'} คน
                   </p>
                 </div>
                 <button
@@ -793,6 +966,78 @@ export default function ManageStudentsPage() {
                     เพิ่มนักเรียน
                   </>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Edit Student Modal ── */}
+      {editingStudent && (
+        <div
+          className={styles.modalOverlay}
+          onClick={() => !isUpdating && setEditingStudent(null)}
+          id="edit-student-modal-overlay"
+        >
+          <div
+            className={`${styles.modal} ${styles.editModal}`}
+            onClick={(e) => e.stopPropagation()}
+            id="edit-student-modal"
+          >
+            <button
+              className={styles.modalClose}
+              onClick={() => setEditingStudent(null)}
+              disabled={isUpdating}
+              aria-label="ปิด"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+            <div className={styles.modalHeader}>
+              <div className={`${styles.modalIcon} ${styles.editModalIcon}`}>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                </svg>
+              </div>
+              <h2 className={styles.modalTitle}>แก้ไขข้อมูลนักเรียน</h2>
+              <p className={styles.modalSubtitle}>ข้อมูลจะถูกอัปเดตในระบบกลาง</p>
+            </div>
+
+            <div className={styles.editFormGrid}>
+              <label className={styles.formField}>
+                <span className={styles.formLabel}>ชื่อ *</span>
+                <input className={styles.formInput} value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
+              </label>
+              <label className={styles.formField}>
+                <span className={styles.formLabel}>นามสกุล</span>
+                <input className={styles.formInput} value={editForm.sureName} onChange={(e) => setEditForm({ ...editForm, sureName: e.target.value })} />
+              </label>
+              <label className={styles.formField}>
+                <span className={styles.formLabel}>อีเมล *</span>
+                <input type="email" className={styles.formInput} value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} />
+              </label>
+              <label className={styles.formField}>
+                <span className={styles.formLabel}>รหัสนักเรียน *</span>
+                <input className={styles.formInput} value={editForm.studentId} onChange={(e) => setEditForm({ ...editForm, studentId: e.target.value })} />
+              </label>
+              <label className={styles.formField}>
+                <span className={styles.formLabel}>ระดับชั้น</span>
+                <input className={styles.formInput} value={editForm.section} onChange={(e) => setEditForm({ ...editForm, section: e.target.value })} />
+              </label>
+              <label className={styles.formField}>
+                <span className={styles.formLabel}>ห้อง</span>
+                <input type="number" min="1" className={styles.formInput} value={editForm.room} onChange={(e) => setEditForm({ ...editForm, room: e.target.value })} />
+              </label>
+            </div>
+
+            {editError && <div className={styles.msgError}>{editError}</div>}
+            <div className={styles.modalActions}>
+              <button className={styles.cancelBtn} onClick={() => setEditingStudent(null)} disabled={isUpdating}>ยกเลิก</button>
+              <button className={styles.submitBtn} onClick={handleUpdateStudent} disabled={isUpdating}>
+                {isUpdating ? <><span className={styles.spinner} /> กำลังบันทึก...</> : 'บันทึกการแก้ไข'}
               </button>
             </div>
           </div>

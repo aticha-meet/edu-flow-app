@@ -1,4 +1,5 @@
 import prisma from '../../configs/prisma';
+import { Prisma } from '@prisma/client';
 
 export class CourseService {
   /**
@@ -38,7 +39,7 @@ export class CourseService {
                 name: true,
                 sureName: true,
                 email: true,
-                studentProfile: { select: { section: true, room: true } },
+                studentProfile: { select: { studentId: true, section: true, room: true } },
               },
             },
           },
@@ -112,9 +113,22 @@ export class CourseService {
   /**
    * ดึงรายชื่อนักเรียนใน course
    */
-  async getEnrollments(courseId: string) {
-    return prisma.enrollment.findMany({
-      where: { courseId },
+  async getEnrollments(courseId: string, filters: { search?: string; section?: string } = {}) {
+    const student: Prisma.UserWhereInput = { role: 'STUDENT' };
+    if (filters.section) student.studentProfile = { is: { section: filters.section } };
+    const search = filters.search?.trim();
+    if (search) {
+      student.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { sureName: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { studentProfile: { is: { studentId: { contains: search, mode: 'insensitive' } } } },
+      ];
+    }
+    const where: Prisma.EnrollmentWhereInput = { courseId, student };
+    const [users, count, totalCount, classrooms] = await prisma.$transaction([
+      prisma.enrollment.findMany({
+      where,
       include: {
         student: {
           select: {
@@ -122,12 +136,22 @@ export class CourseService {
             name: true,
             sureName: true,
             email: true,
-            studentProfile: { select: { section: true, room: true } },
+            studentProfile: { select: { studentId: true, section: true, room: true } },
           },
         },
       },
       orderBy: { enrolledAt: 'asc' },
-    });
+      }),
+      prisma.enrollment.count({ where }),
+      prisma.enrollment.count({ where: { courseId, student: { role: 'STUDENT' } } }),
+      prisma.studentProfile.findMany({
+        where: { user: { role: 'STUDENT', enrollments: { some: { courseId } } } },
+        select: { section: true },
+        distinct: ['section'],
+        orderBy: { section: 'asc' },
+      }),
+    ]);
+    return { users, count, totalCount, sections: classrooms.flatMap(({ section }) => section ? [section] : []) };
   }
 
   /**
@@ -143,11 +167,18 @@ export class CourseService {
             name: true,
             sureName: true,
             email: true,
-            studentProfile: { select: { section: true, room: true } },
+            studentProfile: { select: { studentId: true, section: true, room: true } },
           },
         },
       },
     });
+  }
+
+  async removeEnrollment(courseId: string, studentId: string) {
+    const result = await prisma.enrollment.deleteMany({
+      where: { courseId, studentId },
+    });
+    return result.count > 0;
   }
 
   async addEnrollments(courseId: string, studentIds: string[]) {

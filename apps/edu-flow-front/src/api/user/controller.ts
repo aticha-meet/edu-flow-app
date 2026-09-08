@@ -26,6 +26,26 @@ export const getStudentClassrooms = async (): Promise<StudentClassroomOption[]> 
   }
 };
 
+export interface UpdateStudentPayload {
+  name: string;
+  sureName?: string;
+  email: string;
+  studentId: string;
+  section?: string;
+  room?: number | null;
+}
+
+export const updateStudent = async (
+  studentUserId: string,
+  data: UpdateStudentPayload,
+) => {
+  const request = await axiosInstance.patch(
+    `${PAGE_PATH.API_URL}/students/${studentUserId}`,
+    data,
+  );
+  return request.data.data;
+};
+
 export const getLoginUser = async (data: any) => {
   try {
     const request = await axiosInstance.post(

@@ -35,10 +35,31 @@ export const createCourse = async (data: {
   }
 };
 
-export const getEnrollments = async (courseId: string) => {
+export interface CourseStudentsResponse {
+  users: Array<{
+    id: number;
+    enrolledAt: string;
+    student: {
+      id: string;
+      name: string | null;
+      sureName: string | null;
+      email: string;
+      studentProfile?: { studentId: string; section: string | null; room: number | null } | null;
+    };
+  }>;
+  count: number;
+  totalCount: number;
+  sections: string[];
+}
+
+export const getEnrollments = async (
+  courseId: string,
+  params: { search?: string; section?: string } = {},
+): Promise<CourseStudentsResponse> => {
   try {
     const request = await axiosInstance.get(
       `${PAGE_PATH.API_URL}/course/${courseId}/students`,
+      { params },
     );
     return request.data.data;
   } catch (err) {
@@ -58,6 +79,12 @@ export const addEnrollment = async (courseId: string, studentId: string) => {
     console.log(err);
     throw err;
   }
+};
+
+export const removeEnrollment = async (courseId: string, studentId: string) => {
+  await axiosInstance.delete(
+    `${PAGE_PATH.API_URL}/course/${courseId}/students/${studentId}`,
+  );
 };
 
 export interface BulkEnrollmentResult {

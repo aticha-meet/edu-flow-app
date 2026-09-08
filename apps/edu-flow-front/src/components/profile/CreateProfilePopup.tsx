@@ -7,6 +7,7 @@ import {
   createStudentProfile,
 } from '@/api/profile/controller';
 import { getListUsers, createUser } from '@/api/user/controller';
+import { useToast } from '@/components/ToastProvider';
 
 type ProfileRole = 'teacher' | 'student';
 
@@ -21,6 +22,7 @@ export const CreateProfilePopup = ({
   onClose,
   allowedRoles,
 }: CreateProfilePopupProps) => {
+  const notify = useToast();
   const defaultRole: ProfileRole =
     allowedRoles && allowedRoles.length === 1 ? allowedRoles[0] : 'teacher';
   const [role, setRole] = useState<ProfileRole>(defaultRole);
@@ -53,7 +55,7 @@ export const CreateProfilePopup = ({
       const res = await getListUsers(
         `/users/${role === 'teacher' ? 'teacher' : 'student'}`,
       );
-      setUsers(res.data || []);
+      setUsers(role === 'student' ? res.data.users : res.data || []);
       setHasLoadedUsers(true);
     } catch (err) {
       console.error('Failed to fetch users:', err);
@@ -142,16 +144,21 @@ export const CreateProfilePopup = ({
           department: department.trim(),
         });
         setFormSuccess('สร้างโปรไฟล์ครูสำเร็จ!');
+        notify('เพิ่มครูสำเร็จ');
       } else {
         await createStudentProfile({
           userId: targetUserId,
           studentId: studentId.trim(),
         });
         setFormSuccess('สร้างโปรไฟล์นักเรียนสำเร็จ!');
+        notify('เพิ่มนักเรียนสำเร็จ');
+        window.dispatchEvent(new Event('students-updated'));
       }
 
       setTimeout(() => {
-        handleClose();
+        resetForm();
+        setHasLoadedUsers(false);
+        onClose();
       }, 1200);
     } catch (err: any) {
       const msg =

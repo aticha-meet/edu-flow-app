@@ -5,6 +5,7 @@ import { importStudentsIntoCourse } from '@/api/course/controller';
 import type { ImportCourseStudentsResult } from '@/api/course/controller';
 import { getStudentCSVExampleUrl } from '@/api/user/controller';
 import styles from './import-csv-modal.module.scss';
+import { useToast } from '@/components/ToastProvider';
 
 interface ImportCSVModalProps {
   courseId: string;
@@ -15,6 +16,7 @@ interface ImportCSVModalProps {
 type ModalStep = 'upload' | 'importing' | 'result';
 
 export const ImportCSVModal = ({ courseId, onClose, onImported }: ImportCSVModalProps) => {
+  const notify = useToast();
   const [step, setStep] = useState<ModalStep>('upload');
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -64,6 +66,11 @@ export const ImportCSVModal = ({ courseId, onClose, onImported }: ImportCSVModal
       const res = await importStudentsIntoCourse(courseId, text);
       setResult(res);
       setStep('result');
+      if (res.enrolled > 0) {
+        notify(`เพิ่มนักเรียนเข้าวิชาสำเร็จ ${res.enrolled} คน${res.errors.length ? ` (นำเข้าไม่ได้ ${res.errors.length} รายการ)` : ''}`);
+      } else {
+        notify('นำเข้าเสร็จสิ้น ไม่มีนักเรียนที่ถูกเพิ่มเข้าวิชาใหม่', 'info');
+      }
       if (res.imported > 0 || res.enrolled > 0) onImported();
     } catch (err: any) {
       setImportError(err?.response?.data?.message ?? 'เกิดข้อผิดพลาดในการ import');

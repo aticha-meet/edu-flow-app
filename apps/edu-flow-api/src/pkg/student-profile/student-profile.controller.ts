@@ -66,6 +66,45 @@ export class StudentProfileController {
     }
   }
 
+  async updateStudentProfile(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { name, sureName, email, studentId, section, room } = req.body;
+      const parsedRoom = room === null || room === '' || room === undefined
+        ? null
+        : Number(room);
+
+      if (!id || !name?.trim() || !email?.trim() || !studentId?.trim()) {
+        return res.status(400).json({
+          message: 'name, email and studentId are required',
+        });
+      }
+      if (parsedRoom !== null && (!Number.isInteger(parsedRoom) || parsedRoom < 1)) {
+        return res.status(400).json({ message: 'room must be a positive integer' });
+      }
+
+      const student = await studentProfileService.updateStudent(id, {
+        name: name.trim(),
+        sureName: typeof sureName === 'string' ? sureName.trim() || null : null,
+        email: email.trim(),
+        studentId: studentId.trim(),
+        section: typeof section === 'string' ? section.trim() || null : null,
+        room: parsedRoom,
+      });
+
+      if (!student) {
+        return res.status(404).json({ message: 'Student not found' });
+      }
+      return res.status(200).json({ message: 'Student updated successfully', data: student });
+    } catch (error: any) {
+      if (error?.code === 'P2002') {
+        return res.status(409).json({ message: 'Email or student ID already exists' });
+      }
+      console.error('Update student error:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
   /**
    * POST /students/import-csv
    * Body: { csv: string }  (CSV text ที่ frontend ส่งมา)

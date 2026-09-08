@@ -31,6 +31,58 @@ export class StudentProfileService {
     return prisma.studentProfile.create({ data });
   }
 
+  /** อัปเดตข้อมูล User และ StudentProfile พร้อมกัน */
+  async updateStudent(userId: string, data: {
+    name: string;
+    sureName?: string | null;
+    email: string;
+    studentId: string;
+    section?: string | null;
+    room?: number | null;
+  }) {
+    return prisma.$transaction(async (tx) => {
+      const student = await tx.user.findUnique({
+        where: { id: userId },
+        select: { id: true, role: true },
+      });
+
+      if (!student || student.role !== 'STUDENT') return null;
+
+      return tx.user.update({
+        where: { id: userId },
+        data: {
+          name: data.name,
+          sureName: data.sureName ?? null,
+          email: data.email,
+          studentProfile: {
+            upsert: {
+              create: {
+                studentId: data.studentId,
+                section: data.section ?? null,
+                room: data.room ?? null,
+              },
+              update: {
+                studentId: data.studentId,
+                section: data.section ?? null,
+                room: data.room ?? null,
+              },
+            },
+          },
+        },
+        select: {
+          id: true,
+          name: true,
+          sureName: true,
+          email: true,
+          status: true,
+          studentProfile: {
+            select: { studentId: true, section: true, room: true },
+          },
+        },
+      });
+    });
+  }
+
   /**
    * Import นักเรียนจาก CSV rows (bulk)
    * Logic: ถ้า email มีอยู่แล้ว → skip, ถ้าไม่มี → สร้าง User + StudentProfile

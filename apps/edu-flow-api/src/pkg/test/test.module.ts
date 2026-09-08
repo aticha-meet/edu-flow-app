@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { testController } from './test.controller';
+import { requireRoles } from '../../middleware/requireRoles';
 
 export const TestRouter: Router = Router();
 
@@ -10,7 +11,7 @@ TestRouter.get('/test', (req, res) => testController.getTestsByCourse(req, res))
 TestRouter.get('/test/:id/attempts', (req, res) => testController.getAttempts(req, res));
 
 // GET /test/:id/dashboard — dashboard คะแนนนักเรียน (สำหรับครู/admin)
-TestRouter.get('/test/:id/dashboard', (req, res) => testController.getScoreDashboard(req, res));
+TestRouter.get('/test/:id/dashboard', requireRoles('ADMIN', 'TEACHER'), (req, res) => testController.getScoreDashboard(req, res));
 
 // POST /test/attempt/:attemptId/submit — ส่งข้อสอบ (วางก่อน /:id เพื่อหลีกเลี่ยง route conflict)
 TestRouter.post('/test/attempt/:attemptId/submit', (req, res) =>
@@ -21,7 +22,7 @@ TestRouter.post('/test/attempt/:attemptId/submit', (req, res) =>
 TestRouter.get('/test/:id', (req, res) => testController.getTestById(req, res));
 
 // POST /test — สร้าง test ใหม่พร้อม questions
-TestRouter.post('/test', (req, res) => testController.createTest(req, res));
+TestRouter.post('/test', requireRoles('ADMIN', 'TEACHER'), (req, res) => testController.createTest(req, res));
 
 // POST /test/:id/attempt/start — เริ่มทำข้อสอบ (สร้าง Attempt)
 TestRouter.post('/test/:id/attempt/start', (req, res) =>
@@ -29,5 +30,5 @@ TestRouter.post('/test/:id/attempt/start', (req, res) =>
 );
 
 // DELETE /test/:id
-TestRouter.delete('/test/:id', (req, res) => testController.deleteTest(req, res));
+TestRouter.delete('/test/:id', requireRoles('ADMIN', 'TEACHER'), (req, res) => testController.deleteTest(req, res));
 

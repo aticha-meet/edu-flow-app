@@ -34,6 +34,7 @@ export const handleRefreshToken = async (
         if (!userData)
           return res.status(403).json({ message: 'User not found' });
 
+        req.authUser = userData;
         return next(); // ✅ ตั๋วยังไม่หมดอายุ ปล่อยผ่านไปทำงานต่อเลย!
       } catch (error) {
         console.log(error);
@@ -63,6 +64,7 @@ export const handleRefreshToken = async (
       return res.status(403).json({ message: 'User not found in database' });
 
     console.log(userData);
+    req.authUser = userData;
 
     // สร้าง Access Token ใหม่ 10 นาที
     const newAccessToken = jwt.sign(userData, TOKEN.JWT as string, {

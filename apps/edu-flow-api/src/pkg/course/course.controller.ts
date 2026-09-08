@@ -6,10 +6,11 @@ import { studentProfileService } from '../student-profile/student-profile.servic
 export class CourseController {
   async getListCourse(req: Request, res: Response) {
     try {
-      const { userId, role } = req.query as {
-        userId: string;
-        role: 'ADMIN' | 'TEACHER' | 'STUDENT';
-      };
+      const authUser = req.authUser;
+      if (!authUser) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      const { id: userId, role } = authUser;
 
       if (role === 'ADMIN') {
         const classData = await courseService.findAllAdmin();
@@ -70,22 +71,11 @@ export class CourseController {
 
   async createCourse(req: Request, res: Response) {
     try {
-      const {
-        className,
-        description,
-        teacherId,
-        role,
-        roomId,
-        code,
-        maxStudents,
-        status
-      } = req.body;
+      const { className, description, teacherId, roomId, code, maxStudents, status } = req.body;
+      const authUser = req.authUser!;
 
-      // ตรวจสอบสิทธิ์: ADMIN หรือ TEACHER เท่านั้นที่สร้าง Class ได้
-      if (role !== 'ADMIN' && role !== 'TEACHER') {
-        return res
-          .status(403)
-          .json({ message: 'Access denied: Only ADMIN or TEACHER can create classes' });
+      if (authUser.role === 'TEACHER' && teacherId !== authUser.id) {
+        return res.status(403).json({ message: 'TEACHER can only create classes for themselves' });
       }
 
       // Validate required fields
@@ -130,7 +120,12 @@ export class CourseController {
   async getEnrollments(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const enrollments = await courseService.getEnrollments(id);
+      const { search, section } = req.query;
+      if ((search !== undefined && typeof search !== 'string') ||
+          (section !== undefined && typeof section !== 'string')) {
+        return res.status(400).json({ message: 'search and section must be strings' });
+      }
+      const enrollments = await courseService.getEnrollments(id, { search, section });
       return res.status(200).json({
         message: 'Enrollments fetched successfully',
         data: enrollments,
@@ -159,6 +154,24 @@ export class CourseController {
       }
       console.log(err);
       return res.status(500).json({ message: 'Internal Server Error', error: err });
+    }
+  }
+
+  async removeEnrollment(req: Request, res: Response) {
+    try {
+      const { id, studentId } = req.params;
+      if (!id || !studentId) {
+        return res.status(400).json({ message: 'course ID and student ID are required' });
+      }
+
+      const removed = await courseService.removeEnrollment(id, studentId);
+      if (!removed) {
+        return res.status(404).json({ message: 'Student is not enrolled in this course' });
+      }
+      return res.status(200).json({ message: 'Student removed from course successfully' });
+    } catch (err) {
+      console.error('Remove enrollment error:', err);
+      return res.status(500).json({ message: 'Internal Server Error' });
     }
   }
 
@@ -273,24 +286,20 @@ export class CourseController {
   async updateCourse(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const { role, userId, className, description, roomId, code, maxStudents, status } = req.body;
+      const { className, description, roomId, code, maxStudents, status } = req.body;
+      const authUser = req.authUser!;
 
       if (!id) {
         return res.status(400).json({ message: 'Invalid course ID' });
       }
 
-      // ตรวจสอบสิทธิ์: ADMIN หรือ TEACHER เท่านั้น
-      if (role !== 'ADMIN' && role !== 'TEACHER') {
-        return res.status(403).json({ message: 'Access denied: Only ADMIN or TEACHER can update courses' });
-      }
-
       // TEACHER ต้องเป็นเจ้าของ course
-      if (role === 'TEACHER') {
+      if (authUser.role === 'TEACHER') {
         const course = await courseService.findCourseOwner(id);
         if (!course) {
           return res.status(404).json({ message: 'Course not found' });
         }
-        if (course.teacherId !== userId) {
+        if (course.teacherId !== authUser.id) {
           return res.status(403).json({ message: 'Access denied: You can only update your own courses' });
         }
       }
@@ -320,15 +329,10 @@ export class CourseController {
   async deleteCourse(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const { role, userId } = req.body;
+      const authUser = req.authUser!;
 
       if (!id) {
         return res.status(400).json({ message: 'Invalid course ID' });
-      }
-
-      // ตรวจสอบสิทธิ์: ADMIN หรือ TEACHER เท่านั้น
-      if (role !== 'ADMIN' && role !== 'TEACHER') {
-        return res.status(403).json({ message: 'Access denied: Only ADMIN or TEACHER can delete courses' });
       }
 
       const course = await courseService.findCourseOwner(id);
@@ -337,7 +341,7 @@ export class CourseController {
       }
 
       // TEACHER ต้องเป็นเจ้าของ course
-      if (role === 'TEACHER' && course.teacherId !== userId) {
+      if (authUser.role === 'TEACHER' && course.teacherId !== authUser.id) {
         return res.status(403).json({ message: 'Access denied: You can only delete your own courses' });
       }
 
