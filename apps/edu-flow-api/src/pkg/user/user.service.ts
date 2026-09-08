@@ -1,4 +1,5 @@
 import prisma from '../../configs/prisma';
+import { Prisma } from '@prisma/client';
 
 export class UserService {
   /**
@@ -22,10 +23,66 @@ export class UserService {
   /**
    * ดึงรายชื่อ users ที่เป็น STUDENT พร้อม studentProfile
    */
-  async findStudents() {
-    return prisma.user.findMany({
-      where: { role: 'STUDENT' },
+  async findStudents(filters: {
+    courseId?: string;
+    section?: string;
+    room?: number;
+    search?: string;
+  } = {}) {
+    const where: Prisma.UserWhereInput = { role: 'STUDENT' };
+
+    if (filters.courseId) {
+      where.enrollments = { none: { courseId: filters.courseId } };
+    }
+
+    if (filters.section || filters.room !== undefined) {
+      where.studentProfile = {
+        is: {
+          ...(filters.section ? { section: filters.section } : {}),
+          ...(filters.room !== undefined ? { room: filters.room } : {}),
+        },
+      };
+    }
+
+    const search = filters.search?.trim();
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { sureName: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { studentProfile: { is: { studentId: { contains: search, mode: 'insensitive' } } } },
+      ];
+    }
+
+    const countUsers = await prisma.user.count({ where });
+    const users = await prisma.user.findMany({
+      where,
       include: { studentProfile: true },
+      orderBy: [
+        {
+          studentProfile:
+          {
+            section: 'asc'
+          }
+        },
+        {
+          studentProfile:
+            { room: 'asc' }
+        },
+        {
+          name: 'asc'
+        }
+      ],
+    });
+
+    return { users, count: countUsers };
+  }
+
+  async findStudentClassrooms() {
+    return prisma.studentProfile.findMany({
+      where: { user: { role: 'STUDENT' } },
+      select: { section: true, room: true },
+      orderBy: [{ section: 'asc' }, { room: 'asc' }],
     });
   }
 

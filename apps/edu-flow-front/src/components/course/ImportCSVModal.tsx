@@ -1,22 +1,24 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import { importStudentsCSV, getStudentCSVExampleUrl } from '@/api/user/controller';
-import type { ImportCSVResult } from '@/api/user/controller';
+import { importStudentsIntoCourse } from '@/api/course/controller';
+import type { ImportCourseStudentsResult } from '@/api/course/controller';
+import { getStudentCSVExampleUrl } from '@/api/user/controller';
 import styles from './import-csv-modal.module.scss';
 
 interface ImportCSVModalProps {
+  courseId: string;
   onClose: () => void;
   onImported: () => void;
 }
 
 type ModalStep = 'upload' | 'importing' | 'result';
 
-export const ImportCSVModal = ({ onClose, onImported }: ImportCSVModalProps) => {
+export const ImportCSVModal = ({ courseId, onClose, onImported }: ImportCSVModalProps) => {
   const [step, setStep] = useState<ModalStep>('upload');
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [result, setResult] = useState<ImportCSVResult | null>(null);
+  const [result, setResult] = useState<ImportCourseStudentsResult | null>(null);
   const [importError, setImportError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -59,10 +61,10 @@ export const ImportCSVModal = ({ onClose, onImported }: ImportCSVModalProps) => 
     setImportError('');
     try {
       const text = await file.text();
-      const res = await importStudentsCSV(text);
+      const res = await importStudentsIntoCourse(courseId, text);
       setResult(res);
       setStep('result');
-      if (res.imported > 0) onImported();
+      if (res.imported > 0 || res.enrolled > 0) onImported();
     } catch (err: any) {
       setImportError(err?.response?.data?.message ?? 'เกิดข้อผิดพลาดในการ import');
       setStep('upload');
@@ -241,6 +243,10 @@ export const ImportCSVModal = ({ onClose, onImported }: ImportCSVModalProps) => 
         {step === 'result' && result && (
           <>
             <div className={styles.resultSummary}>
+              <div className={styles.resultCard} data-type="enrolled">
+                <span className={styles.resultNum}>{result.enrolled}</span>
+                <span className={styles.resultLabel}>เพิ่มเข้า course</span>
+              </div>
               <div className={styles.resultCard} data-type="success">
                 <span className={styles.resultNum}>{result.imported}</span>
                 <span className={styles.resultLabel}>นำเข้าสำเร็จ</span>
@@ -270,7 +276,7 @@ export const ImportCSVModal = ({ onClose, onImported }: ImportCSVModalProps) => 
               </div>
             )}
 
-            {result.imported === 0 && result.errors.length === 0 && (
+            {result.imported === 0 && result.enrolled === 0 && result.errors.length === 0 && (
               <div className={styles.allSkipped}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />

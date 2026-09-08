@@ -1,10 +1,25 @@
 import axiosInstance from '@/config/axiosConfig';
 import { PAGE_PATH } from '@/config/pagePath';
 
-export const getListUsers = async (url: string) => {
+export const getListUsers = async (url: string, params?: Record<string, string | undefined>) => {
   try {
-    const request = await axiosInstance.get(`${PAGE_PATH.API_URL}${url}`);
+    const request = await axiosInstance.get(`${PAGE_PATH.API_URL}${url}`, { params });
     return request.data;
+  } catch (err) {
+    console.log(err);
+    throw err;
+  }
+};
+
+export interface StudentClassroomOption {
+  section: string | null;
+  room: number | null;
+}
+
+export const getStudentClassrooms = async (): Promise<StudentClassroomOption[]> => {
+  try {
+    const request = await axiosInstance.get(`${PAGE_PATH.API_URL}/users/student/classrooms`);
+    return request.data.data as StudentClassroomOption[];
   } catch (err) {
     console.log(err);
     throw err;

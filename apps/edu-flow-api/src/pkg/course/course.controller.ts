@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import { courseService } from './course.service';
+import { parseCSV } from '../student-profile/student-profile.controller';
+import { studentProfileService } from '../student-profile/student-profile.service';
 
 export class CourseController {
   async getListCourse(req: Request, res: Response) {
@@ -155,6 +157,58 @@ export class CourseController {
       if (err?.code === 'P2002') {
         return res.status(409).json({ message: 'Student is already enrolled in this course' });
       }
+      console.log(err);
+      return res.status(500).json({ message: 'Internal Server Error', error: err });
+    }
+  }
+
+  async addEnrollments(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { studentIds } = req.body;
+      if (!Array.isArray(studentIds)) {
+        return res.status(400).json({ message: 'studentIds must be an array' });
+      }
+
+      const result = await courseService.addEnrollments(id, studentIds);
+      return res.status(200).json({
+        message: 'Students enrolled successfully',
+        data: result,
+      });
+    } catch (err) {
+      console.log(err);
+      return res.status(500).json({ message: 'Internal Server Error', error: err });
+    }
+  }
+
+  async importStudentsCSV(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { csv } = req.body;
+      if (!csv || typeof csv !== 'string') {
+        return res.status(400).json({ message: 'csv field (string) is required' });
+      }
+
+      const rows = parseCSV(csv);
+      if (rows.length === 0) {
+        return res.status(400).json({ message: 'ไม่พบข้อมูลใน CSV หรือ format ไม่ถูกต้อง' });
+      }
+
+      const profileResult = await studentProfileService.importFromCSV(rows);
+      const enrollmentResult = await courseService.addEnrollments(id, profileResult.userIds);
+
+      return res.status(200).json({
+        message: 'Import students into course successfully',
+        data: {
+          imported: profileResult.imported,
+          skipped: profileResult.skipped,
+          errors: profileResult.errors,
+          enrolled: enrollmentResult.added,
+          alreadyEnrolled: enrollmentResult.skipped,
+          missing: enrollmentResult.missing,
+        },
+      });
+    } catch (err) {
       console.log(err);
       return res.status(500).json({ message: 'Internal Server Error', error: err });
     }

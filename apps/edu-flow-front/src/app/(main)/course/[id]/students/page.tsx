@@ -4,8 +4,12 @@ import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useRoleGuard } from '@/utils/useRoleGuard';
-import { getListCourse, getEnrollments, addEnrollment } from '@/api/course/controller';
-import { getListUsers } from '@/api/user/controller';
+import {
+  getListCourse,
+  getEnrollments,
+  addEnrollments,
+} from '@/api/course/controller';
+import { getListUsers, getStudentClassrooms } from '@/api/user/controller';
 import { CourseSidebar } from '@/components/course/CourseSidebar';
 import { ImportCSVModal } from '@/components/course/ImportCSVModal';
 import styles from './students.module.scss';
@@ -39,7 +43,10 @@ export default function ManageStudentsPage() {
   const router = useRouter();
 
   const { session } = useRoleGuard(['TEACHER', 'ADMIN'], '/course');
-  const userRole = (session?.user as any)?.role as 'TEACHER' | 'ADMIN' | undefined;
+  const userRole = (session?.user as any)?.role as
+    | 'TEACHER'
+    | 'ADMIN'
+    | undefined;
 
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [enrollments, setEnrollments] = useState<StudentItem[]>([]);
@@ -48,8 +55,14 @@ export default function ManageStudentsPage() {
   // Add student modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [allStudents, setAllStudents] = useState<any[]>([]);
+  const [classroomOptions, setClassroomOptions] = useState<
+    { section: string | null; room: number | null }[]
+  >([]);
   const [isLoadingStudents, setIsLoadingStudents] = useState(false);
-  const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+  const [studentSearch, setStudentSearch] = useState('');
+  const [studentSection, setStudentSection] = useState('');
+  const [studentRoom, setStudentRoom] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [addError, setAddError] = useState('');
   const [addSuccess, setAddSuccess] = useState('');
@@ -82,35 +95,61 @@ export default function ManageStudentsPage() {
     fetchData();
   }, [fetchData]);
 
-  const handleOpenModal = async () => {
+  const handleOpenModal = () => {
     setIsModalOpen(true);
     setAddError('');
     setAddSuccess('');
-    setSelectedStudentId('');
-    if (allStudents.length === 0) {
-      setIsLoadingStudents(true);
-      try {
-        const res = await getListUsers('/users/student');
-        setAllStudents(res.data || []);
-      } catch {
-        setAllStudents([]);
-      } finally {
-        setIsLoadingStudents(false);
-      }
-    }
+    setSelectedStudentIds([]);
+    setStudentSearch('');
+    setStudentSection('');
+    setStudentRoom('');
   };
 
+  useEffect(() => {
+    if (!isModalOpen || !id) return;
+
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      setIsLoadingStudents(true);
+      try {
+        const res = await getListUsers('/users/student', {
+          courseId: id,
+          section: studentSection || undefined,
+          room: studentRoom || undefined,
+          search: studentSearch.trim() || undefined,
+        });
+        if (!cancelled) setAllStudents(res.data.users || []);
+      } catch {
+        if (!cancelled) setAllStudents([]);
+      } finally {
+        if (!cancelled) setIsLoadingStudents(false);
+      }
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [id, isModalOpen, studentRoom, studentSearch, studentSection]);
+
+  useEffect(() => {
+    if (!isModalOpen || classroomOptions.length > 0) return;
+    getStudentClassrooms()
+      .then(setClassroomOptions)
+      .catch(() => setClassroomOptions([]));
+  }, [classroomOptions.length, isModalOpen]);
+
   const handleAddStudent = async () => {
-    if (!selectedStudentId) {
+    if (selectedStudentIds.length === 0) {
       setAddError('กรุณาเลือกนักเรียน');
       return;
     }
     setIsAdding(true);
     setAddError('');
     try {
-      await addEnrollment(id, selectedStudentId);
-      setAddSuccess('เพิ่มนักเรียนสำเร็จ!');
+      const result = await addEnrollments(id, selectedStudentIds);
       await fetchData();
+      setAddSuccess(`เพิ่มนักเรียนสำเร็จ ${result.added} คน`);
       setTimeout(() => {
         setIsModalOpen(false);
         setAddSuccess('');
@@ -129,17 +168,65 @@ export default function ManageStudentsPage() {
   const enrolledIds = new Set(enrollments.map((e) => e.student.id));
   const availableStudents = allStudents.filter((s) => !enrolledIds.has(s.id));
 
+  const modalSections = Array.from(
+    new Set(
+      classroomOptions
+        .map((option) => option.section)
+        .filter(Boolean) as string[],
+    ),
+  ).sort();
+  const modalRooms = Array.from(
+    new Set(
+      classroomOptions
+        .filter(
+          (option) => !studentSection || option.section === studentSection,
+        )
+        .map((option) => option.room)
+        .filter((room): room is number => room !== null && room !== undefined),
+    ),
+  ).sort((a, b) => a - b);
+  // รายการนี้ถูกกรองจาก API แล้ว จึงไม่ต้องโหลดนักเรียนทั้งหมดมา filter ที่ browser
+  const filteredAvailableStudents = availableStudents;
+  const allVisibleSelected =
+    filteredAvailableStudents.length > 0 &&
+    filteredAvailableStudents.every((s) => selectedStudentIds.includes(s.id));
+
+  const toggleStudent = (studentId: string) => {
+    setSelectedStudentIds((current) =>
+      current.includes(studentId)
+        ? current.filter((id) => id !== studentId)
+        : [...current, studentId],
+    );
+    setAddError('');
+  };
+
+  const toggleAllVisibleStudents = () => {
+    setSelectedStudentIds((current) => {
+      if (allVisibleSelected) {
+        const visibleIds = new Set(filteredAvailableStudents.map((s) => s.id));
+        return current.filter((studentId) => !visibleIds.has(studentId));
+      }
+      return Array.from(
+        new Set([...current, ...filteredAvailableStudents.map((s) => s.id)]),
+      );
+    });
+    setAddError('');
+  };
+
   // ดึง unique sections สำหรับ filter dropdown
   const sections = Array.from(
     new Set(
       enrollments
         .map((e) => e.student.studentProfile?.section)
-        .filter(Boolean) as string[]
-    )
+        .filter(Boolean) as string[],
+    ),
   ).sort();
 
   const filtered = enrollments.filter((e) => {
-    const fullName = [e.student.name, e.student.sureName].filter(Boolean).join(' ').toLowerCase();
+    const fullName = [e.student.name, e.student.sureName]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
     const matchSearch =
       fullName.includes(search.toLowerCase()) ||
       e.student.email.toLowerCase().includes(search.toLowerCase());
@@ -152,7 +239,10 @@ export default function ManageStudentsPage() {
   // สร้าง label ห้องเรียน
   const classroomLabel = (profile?: StudentProfile | null) => {
     if (!profile) return null;
-    const parts = [profile.section, profile.room ? `ห้อง ${profile.room}` : null].filter(Boolean);
+    const parts = [
+      profile.section,
+      profile.room ? `ห้อง ${profile.room}` : null,
+    ].filter(Boolean);
     return parts.length ? parts.join(' ') : null;
   };
 
@@ -163,9 +253,20 @@ export default function ManageStudentsPage() {
         {isLoading ? (
           <aside className={styles.sidebar}>
             <div className={styles.skeletonBanner} />
-            <div style={{ padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div
+              style={{
+                padding: '16px 12px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 10,
+              }}
+            >
               {[80, 100, 100, 100].map((w, i) => (
-                <div key={i} className={styles.skeletonLine} style={{ height: 36, width: `${w}%` }} />
+                <div
+                  key={i}
+                  className={styles.skeletonLine}
+                  style={{ height: 36, width: `${w}%` }}
+                />
               ))}
             </div>
           </aside>
@@ -176,7 +277,9 @@ export default function ManageStudentsPage() {
             courseName={courseName}
             activeMenu="manage-students"
             userRole={userRole}
-            onMenuChange={() => { router.push(`/course/${id}`); }}
+            onMenuChange={() => {
+              router.push(`/course/${id}`);
+            }}
           />
         )}
 
@@ -206,7 +309,16 @@ export default function ManageStudentsPage() {
                 id="import-csv-btn"
                 onClick={() => setIsCSVModalOpen(true)}
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                   <polyline points="7 10 12 15 17 10" />
                   <line x1="12" y1="15" x2="12" y2="3" />
@@ -219,7 +331,16 @@ export default function ManageStudentsPage() {
                 id="add-student-btn"
                 onClick={handleOpenModal}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                   <circle cx="8.5" cy="7" r="4" />
                   <line x1="20" y1="8" x2="20" y2="14" />
@@ -233,7 +354,9 @@ export default function ManageStudentsPage() {
           {/* Stats */}
           <div className={styles.statsRow}>
             <div className={styles.statCard}>
-              <span className={styles.statValue}>{isLoading ? '—' : enrollments.length}</span>
+              <span className={styles.statValue}>
+                {isLoading ? '—' : enrollments.length}
+              </span>
               <span className={styles.statLabel}>นักเรียนทั้งหมด</span>
             </div>
             {sections.length > 0 && (
@@ -247,7 +370,17 @@ export default function ManageStudentsPage() {
           {/* Search & Filter Row */}
           <div className={styles.searchRow}>
             <div className={styles.searchBox}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={styles.searchIcon}>
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={styles.searchIcon}
+              >
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
@@ -270,7 +403,9 @@ export default function ManageStudentsPage() {
               >
                 <option value="">ทุกห้อง</option>
                 {sections.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
                 ))}
               </select>
             )}
@@ -283,23 +418,46 @@ export default function ManageStudentsPage() {
                 <div key={i} className={styles.skeletonCard}>
                   <div className={styles.skeletonAvatar} />
                   <div style={{ flex: 1 }}>
-                    <div className={styles.skeletonLine} style={{ height: 14, width: '60%' }} />
-                    <div className={styles.skeletonLine} style={{ height: 12, width: '80%', marginTop: 8 }} />
+                    <div
+                      className={styles.skeletonLine}
+                      style={{ height: 14, width: '60%' }}
+                    />
+                    <div
+                      className={styles.skeletonLine}
+                      style={{ height: 12, width: '80%', marginTop: 8 }}
+                    />
                   </div>
                 </div>
               ))}
             </div>
           ) : filtered.length === 0 ? (
             <div className={styles.empty}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity={0.3}>
+              <svg
+                width="48"
+                height="48"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity={0.3}
+              >
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                 <circle cx="9" cy="7" r="4" />
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
                 <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
-              <p>{search || filterSection ? 'ไม่พบนักเรียนที่ค้นหา' : 'ยังไม่มีนักเรียนในรายวิชานี้'}</p>
+              <p>
+                {search || filterSection
+                  ? 'ไม่พบนักเรียนที่ค้นหา'
+                  : 'ยังไม่มีนักเรียนในรายวิชานี้'}
+              </p>
               {!search && !filterSection && (
-                <button className={styles.emptyAddBtn} onClick={handleOpenModal}>
+                <button
+                  className={styles.emptyAddBtn}
+                  onClick={handleOpenModal}
+                >
                   เพิ่มนักเรียนคนแรก
                 </button>
               )}
@@ -308,15 +466,39 @@ export default function ManageStudentsPage() {
             <div className={styles.studentGrid}>
               {filtered.map((enrollment, idx) => {
                 const s = enrollment.student;
-                const fullName = [s.name, s.sureName].filter(Boolean).join(' ') || '—';
-                const initials = [s.name?.[0], s.sureName?.[0]].filter(Boolean).join('').toUpperCase() || '?';
-                const colors = ['#6366f1', '#8b5cf6', '#06b6d4', '#f59e0b', '#10b981', '#ec4899'];
+                const fullName =
+                  [s.name, s.sureName].filter(Boolean).join(' ') || '—';
+                const initials =
+                  [s.name?.[0], s.sureName?.[0]]
+                    .filter(Boolean)
+                    .join('')
+                    .toUpperCase() || '?';
+                const colors = [
+                  '#6366f1',
+                  '#8b5cf6',
+                  '#06b6d4',
+                  '#f59e0b',
+                  '#10b981',
+                  '#ec4899',
+                ];
                 const color = colors[idx % colors.length];
                 const classroom = classroomLabel(s.studentProfile);
                 return (
-                  <div key={enrollment.id} className={styles.studentCard} id={`student-card-${s.id}`}>
-                    <div className={styles.avatarWrap} style={{ background: `${color}22`, borderColor: `${color}44` }}>
-                      <span className={styles.avatarText} style={{ color }}>{initials}</span>
+                  <div
+                    key={enrollment.id}
+                    className={styles.studentCard}
+                    id={`student-card-${s.id}`}
+                  >
+                    <div
+                      className={styles.avatarWrap}
+                      style={{
+                        background: `${color}22`,
+                        borderColor: `${color}44`,
+                      }}
+                    >
+                      <span className={styles.avatarText} style={{ color }}>
+                        {initials}
+                      </span>
                     </div>
                     <div className={styles.studentInfo}>
                       <p className={styles.studentName}>{fullName}</p>
@@ -324,7 +506,16 @@ export default function ManageStudentsPage() {
                       {/* Classroom badge */}
                       {classroom && (
                         <span className={styles.classroomBadge}>
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <svg
+                            width="10"
+                            height="10"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
                             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                             <polyline points="9 22 9 12 15 12 15 22" />
                           </svg>
@@ -333,13 +524,32 @@ export default function ManageStudentsPage() {
                       )}
                     </div>
                     <div className={styles.enrolledDate}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <rect
+                          x="3"
+                          y="4"
+                          width="18"
+                          height="18"
+                          rx="2"
+                          ry="2"
+                        />
                         <line x1="16" y1="2" x2="16" y2="6" />
                         <line x1="8" y1="2" x2="8" y2="6" />
                         <line x1="3" y1="10" x2="21" y2="10" />
                       </svg>
-                      {new Date(enrollment.enrolledAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      {new Date(enrollment.enrolledAt).toLocaleDateString(
+                        'th-TH',
+                        { day: 'numeric', month: 'short', year: 'numeric' },
+                      )}
                     </div>
                   </div>
                 );
@@ -351,10 +561,31 @@ export default function ManageStudentsPage() {
 
       {/* ── Add Student Modal ── */}
       {isModalOpen && (
-        <div className={styles.modalOverlay} onClick={() => setIsModalOpen(false)} id="add-student-modal-overlay">
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()} id="add-student-modal">
-            <button className={styles.modalClose} onClick={() => setIsModalOpen(false)} aria-label="ปิด">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <div
+          className={styles.modalOverlay}
+          onClick={() => setIsModalOpen(false)}
+          id="add-student-modal-overlay"
+        >
+          <div
+            className={styles.modal}
+            onClick={(e) => e.stopPropagation()}
+            id="add-student-modal"
+          >
+            <button
+              className={styles.modalClose}
+              onClick={() => setIsModalOpen(false)}
+              aria-label="ปิด"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
@@ -362,7 +593,16 @@ export default function ManageStudentsPage() {
 
             <div className={styles.modalHeader}>
               <div className={styles.modalIcon}>
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="26"
+                  height="26"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                   <circle cx="8.5" cy="7" r="4" />
                   <line x1="20" y1="8" x2="20" y2="14" />
@@ -370,59 +610,185 @@ export default function ManageStudentsPage() {
                 </svg>
               </div>
               <h2 className={styles.modalTitle}>เพิ่มนักเรียนเข้าวิชา</h2>
-              <p className={styles.modalSubtitle}>เลือกนักเรียนที่ต้องการเพิ่มเข้า {courseName}</p>
+              <p className={styles.modalSubtitle}>
+                เลือกนักเรียนที่ต้องการเพิ่มเข้า {courseName}
+              </p>
             </div>
 
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>
-                เลือกนักเรียน <span className={styles.required}>*</span>
-              </label>
-              <select
-                className={styles.formSelect}
-                value={selectedStudentId}
-                onChange={(e) => { setSelectedStudentId(e.target.value); setAddError(''); }}
-                disabled={isLoadingStudents}
-                id="select-student"
-              >
-                <option value="">
-                  {isLoadingStudents ? 'กำลังโหลด...' : availableStudents.length === 0 ? 'ไม่มีนักเรียนที่เพิ่มได้' : '-- เลือกนักเรียน --'}
-                </option>
-                {availableStudents.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {[s.name, s.sureName].filter(Boolean).join(' ') || s.email}
-                    {s.studentProfile?.section ? ` (${s.studentProfile.section}${s.studentProfile.room ? ` ห้อง ${s.studentProfile.room}` : ''})` : ''}
-                    {' '}– {s.email}
-                  </option>
-                ))}
-              </select>
+            <div className={styles.studentPicker}>
+              <div className={styles.pickerToolbar}>
+                <div>
+                  <p className={styles.formLabel}>เลือกนักเรียน</p>
+                  <p className={styles.selectionCount}>
+                    เลือกแล้ว {selectedStudentIds.length} จาก{' '}
+                    {availableStudents.length} คน
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className={styles.selectAllBtn}
+                  onClick={toggleAllVisibleStudents}
+                  disabled={
+                    isLoadingStudents || filteredAvailableStudents.length === 0
+                  }
+                >
+                  {allVisibleSelected ? 'ยกเลิกทั้งหมด' : 'เลือกทั้งหมด'}
+                </button>
+              </div>
+
+              <div className={styles.pickerFilters}>
+                <input
+                  className={styles.pickerSearch}
+                  type="search"
+                  placeholder="ค้นหาชื่อ อีเมล หรือรหัสนักเรียน"
+                  value={studentSearch}
+                  onChange={(e) => setStudentSearch(e.target.value)}
+                />
+                <select
+                  className={styles.pickerSelect}
+                  value={studentSection}
+                  onChange={(e) => {
+                    setStudentSection(e.target.value);
+                    setStudentRoom('');
+                  }}
+                >
+                  <option value="">ทุกระดับชั้น</option>
+                  {modalSections.map((section) => (
+                    <option key={section} value={section}>
+                      {section}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  className={styles.pickerSelect}
+                  value={studentRoom}
+                  onChange={(e) => setStudentRoom(e.target.value)}
+                >
+                  <option value="">ทุกห้อง</option>
+                  {modalRooms.map((room) => (
+                    <option key={room} value={String(room)}>
+                      ห้อง {room}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className={styles.studentOptions}>
+                {isLoadingStudents ? (
+                  <div className={styles.optionsEmpty}>
+                    กำลังโหลดรายชื่อนักเรียน...
+                  </div>
+                ) : filteredAvailableStudents.length === 0 ? (
+                  <div className={styles.optionsEmpty}>
+                    ไม่พบนักเรียนที่ตรงกับตัวกรอง
+                  </div>
+                ) : (
+                  filteredAvailableStudents.map((s) => {
+                    const fullName =
+                      [s.name, s.sureName].filter(Boolean).join(' ') || s.email;
+                    const classroom = [
+                      s.studentProfile?.section,
+                      s.studentProfile?.room
+                        ? `ห้อง ${s.studentProfile.room}`
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ');
+                    const checked = selectedStudentIds.includes(s.id);
+                    return (
+                      <label
+                        key={s.id}
+                        className={`${styles.studentOption} ${checked ? styles.studentOptionSelected : ''}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleStudent(s.id)}
+                        />
+                        <span className={styles.checkboxMark} />
+                        <span className={styles.optionInfo}>
+                          <span className={styles.optionName}>{fullName}</span>
+                          <span className={styles.optionMeta}>
+                            {classroom || 'ยังไม่มีข้อมูลห้อง'} · {s.email}
+                          </span>
+                        </span>
+                      </label>
+                    );
+                  })
+                )}
+              </div>
             </div>
 
             {addError && (
               <div className={styles.msgError}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="15" y1="9" x2="9" y2="15" />
+                  <line x1="9" y1="9" x2="15" y2="15" />
                 </svg>
                 {addError}
               </div>
             )}
             {addSuccess && (
               <div className={styles.msgSuccess}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
                 </svg>
                 {addSuccess}
               </div>
             )}
 
             <div className={styles.modalActions}>
-              <button className={styles.cancelBtn} onClick={() => setIsModalOpen(false)} disabled={isAdding}>ยกเลิก</button>
-              <button className={styles.submitBtn} onClick={handleAddStudent} disabled={isAdding || !selectedStudentId} id="confirm-add-student-btn">
+              <button
+                className={styles.cancelBtn}
+                onClick={() => setIsModalOpen(false)}
+                disabled={isAdding}
+              >
+                ยกเลิก
+              </button>
+              <button
+                className={styles.submitBtn}
+                onClick={handleAddStudent}
+                disabled={isAdding || selectedStudentIds.length === 0}
+                id="confirm-add-student-btn"
+              >
                 {isAdding ? (
-                  <><span className={styles.spinner} /> กำลังเพิ่ม...</>
+                  <>
+                    <span className={styles.spinner} /> กำลังเพิ่ม...
+                  </>
                 ) : (
                   <>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <line x1="12" y1="5" x2="12" y2="19" />
+                      <line x1="5" y1="12" x2="19" y2="12" />
                     </svg>
                     เพิ่มนักเรียน
                   </>
@@ -436,6 +802,7 @@ export default function ManageStudentsPage() {
       {/* ── Import CSV Modal ── */}
       {isCSVModalOpen && (
         <ImportCSVModal
+          courseId={id}
           onClose={() => setIsCSVModalOpen(false)}
           onImported={fetchData}
         />

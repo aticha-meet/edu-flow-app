@@ -39,10 +39,12 @@ export class StudentProfileService {
     imported: number;
     skipped: number;
     errors: { row: number; studentId: string; reason: string }[];
+    userIds: string[];
   }> {
     let imported = 0;
     let skipped = 0;
     const errors: { row: number; studentId: string; reason: string }[] = [];
+    const userIds: string[] = [];
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
@@ -56,8 +58,14 @@ export class StudentProfileService {
 
       try {
         // ตรวจสอบ email ซ้ำ
-        const existingUser = await prisma.user.findUnique({ where: { email: row.email } });
+        const existingUser = await prisma.user.findUnique({
+          where: { email: row.email },
+          include: { studentProfile: true },
+        });
         if (existingUser) {
+          if (existingUser.role === 'STUDENT' && existingUser.studentProfile) {
+            userIds.push(existingUser.id);
+          }
           skipped++;
           continue;
         }
@@ -65,12 +73,13 @@ export class StudentProfileService {
         // ตรวจสอบ studentId ซ้ำ
         const existingProfile = await prisma.studentProfile.findUnique({ where: { studentId: row.studentId } });
         if (existingProfile) {
+          userIds.push(existingProfile.userId);
           skipped++;
           continue;
         }
 
         // สร้าง User + StudentProfile ในคราวเดียว
-        await prisma.user.create({
+        const createdUser = await prisma.user.create({
           data: {
             email: row.email,
             name: row.firstName,
@@ -85,6 +94,7 @@ export class StudentProfileService {
             },
           },
         });
+        userIds.push(createdUser.id);
         imported++;
       } catch (err: any) {
         errors.push({
@@ -95,7 +105,7 @@ export class StudentProfileService {
       }
     }
 
-    return { imported, skipped, errors };
+    return { imported, skipped, errors, userIds };
   }
 }
 

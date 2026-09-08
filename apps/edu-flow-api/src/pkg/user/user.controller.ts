@@ -96,10 +96,34 @@ export class UserController {
 
   async getStudent(req: Request, res: Response) {
     try {
-      const students = await userService.findStudents();
+      const { courseId, section, search } = req.query as {
+        courseId?: string;
+        section?: string;
+        room?: string;
+        search?: string;
+      };
+      const room = req.query.room ? Number(req.query.room) : undefined;
+      if (room !== undefined && (!Number.isInteger(room) || room < 1)) {
+        return res.status(400).json({ message: 'room must be a positive integer' });
+      }
+
+      const students = await userService.findStudents({ courseId, section, room, search });
       return res
         .status(200)
         .json({ message: 'Students fetched successfully', data: students });
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ message: 'Internal server error', error: error });
+    }
+  }
+
+  async getStudentClassrooms(req: Request, res: Response) {
+    try {
+      const classrooms = await userService.findStudentClassrooms();
+      return res
+        .status(200)
+        .json({ message: 'Student classrooms fetched successfully', data: classrooms });
     } catch (error) {
       return res
         .status(500)

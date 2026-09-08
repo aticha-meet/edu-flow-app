@@ -23,12 +23,23 @@ export class CourseService {
       },
       include: {
         teacher: {
-          select: { id: true, name: true, sureName: true, email: true },
+          select: {
+            id: true,
+            name: true,
+            sureName: true,
+            email: true,
+          },
         },
         enrollments: {
           include: {
             student: {
-              select: { id: true, name: true, sureName: true, email: true },
+              select: {
+                id: true,
+                name: true,
+                sureName: true,
+                email: true,
+                studentProfile: { select: { section: true, room: true } },
+              },
             },
           },
         },
@@ -106,7 +117,13 @@ export class CourseService {
       where: { courseId },
       include: {
         student: {
-          select: { id: true, name: true, sureName: true, email: true },
+          select: {
+            id: true,
+            name: true,
+            sureName: true,
+            email: true,
+            studentProfile: { select: { section: true, room: true } },
+          },
         },
       },
       orderBy: { enrolledAt: 'asc' },
@@ -121,10 +138,41 @@ export class CourseService {
       data: { courseId, studentId },
       include: {
         student: {
-          select: { id: true, name: true, sureName: true, email: true },
+          select: {
+            id: true,
+            name: true,
+            sureName: true,
+            email: true,
+            studentProfile: { select: { section: true, room: true } },
+          },
         },
       },
     });
+  }
+
+  async addEnrollments(courseId: string, studentIds: string[]) {
+    const uniqueStudentIds = [...new Set(studentIds.filter(Boolean))];
+    if (uniqueStudentIds.length === 0) {
+      return { added: 0, skipped: 0, missing: 0 };
+    }
+
+    const students = await prisma.user.findMany({
+      where: { id: { in: uniqueStudentIds }, role: 'STUDENT' },
+      select: { id: true },
+    });
+    const validStudentIds = students.map((student) => student.id);
+    const missing = uniqueStudentIds.length - validStudentIds.length;
+
+    const created = await prisma.enrollment.createMany({
+      data: validStudentIds.map((studentId) => ({ courseId, studentId })),
+      skipDuplicates: true,
+    });
+
+    return {
+      added: created.count,
+      skipped: validStudentIds.length - created.count,
+      missing,
+    };
   }
 
   /**

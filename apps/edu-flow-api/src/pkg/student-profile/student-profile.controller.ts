@@ -14,7 +14,7 @@ const EXAMPLE_CSV = `studentId,firstName,lastName,email,section,room
 /**
  * แปลง CSV text → array of rows (รองรับ BOM UTF-8)
  */
-function parseCSV(text: string): CSVStudentRow[] {
+export function parseCSV(text: string): CSVStudentRow[] {
   // ลบ BOM ถ้ามี
   const cleaned = text.replace(/^\uFEFF/, '').trim();
   const lines = cleaned.split(/\r?\n/).filter((l) => l.trim().length > 0);

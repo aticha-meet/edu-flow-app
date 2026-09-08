@@ -21,6 +21,12 @@ CourseRouter.delete('/course/:id', (req, res) =>
 CourseRouter.get('/course/:id/students', (req, res) =>
   courseController.getEnrollments(req, res),
 );
+CourseRouter.post('/course/:id/students/bulk', (req, res) =>
+  courseController.addEnrollments(req, res),
+);
+CourseRouter.post('/course/:id/students/import-csv', (req, res) =>
+  courseController.importStudentsCSV(req, res),
+);
 CourseRouter.post('/course/:id/students', (req, res) =>
   courseController.addEnrollment(req, res),
 );

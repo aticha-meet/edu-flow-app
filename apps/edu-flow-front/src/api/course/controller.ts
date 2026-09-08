@@ -60,6 +60,53 @@ export const addEnrollment = async (courseId: string, studentId: string) => {
   }
 };
 
+export interface BulkEnrollmentResult {
+  added: number;
+  skipped: number;
+  missing: number;
+}
+
+export const addEnrollments = async (
+  courseId: string,
+  studentIds: string[],
+): Promise<BulkEnrollmentResult> => {
+  try {
+    const request = await axiosInstance.post(
+      `${PAGE_PATH.API_URL}/course/${courseId}/students/bulk`,
+      { studentIds },
+    );
+    return request.data.data as BulkEnrollmentResult;
+  } catch (err) {
+    console.log(err);
+    throw err;
+  }
+};
+
+export interface ImportCourseStudentsResult {
+  imported: number;
+  skipped: number;
+  errors: { row: number; studentId: string; reason: string }[];
+  enrolled: number;
+  alreadyEnrolled: number;
+  missing: number;
+}
+
+export const importStudentsIntoCourse = async (
+  courseId: string,
+  csvText: string,
+): Promise<ImportCourseStudentsResult> => {
+  try {
+    const request = await axiosInstance.post(
+      `${PAGE_PATH.API_URL}/course/${courseId}/students/import-csv`,
+      { csv: csvText },
+    );
+    return request.data.data as ImportCourseStudentsResult;
+  } catch (err) {
+    console.log(err);
+    throw err;
+  }
+};
+
 // ─── Syllabus ─────────────────────────────────────────────────────
 
 export const getSyllabus = async (courseId: string) => {

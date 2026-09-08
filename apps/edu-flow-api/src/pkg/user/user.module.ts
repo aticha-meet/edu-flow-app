@@ -9,6 +9,9 @@ UserRouter.post('/user/login', (req, res) => userController.getUser(req, res));
 UserRouter.get('/users/student', (req, res) =>
   userController.getStudent(req, res),
 );
+UserRouter.get('/users/student/classrooms', (req, res) =>
+  userController.getStudentClassrooms(req, res),
+);
 UserRouter.get('/users/teacher', (req, res) =>
   userController.getTeacher(req, res),
 );
