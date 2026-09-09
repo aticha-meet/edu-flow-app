@@ -44,11 +44,7 @@ export const authOptions = {
 
         // Sync with our backend to get role and custom backendToken
         try {
-          const baseURL = process.env.NEXT_PUBLIC_IS_PRODUCTION === 'true'
-            ? process.env.NEXT_PUBLIC_PROD_ENDPOINT_URL
-            : process.env.NEXT_PUBLIC_LOCAL_ENDPOINT_URL;
-
-          const res = await fetch(`${baseURL}/auth/google-sync`,
+          const res = await fetch(`${PAGE_PATH.API_URL}/auth/google-sync`,
             {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },

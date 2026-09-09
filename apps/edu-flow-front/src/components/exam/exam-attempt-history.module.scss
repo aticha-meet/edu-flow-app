@@ -1,0 +1,50 @@
+.history {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 20px;
+  text-align: left;
+}
+
+.history h3 {
+  margin: 0 0 2px;
+  color: #64748b;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.attemptName {
+  color: #94a3b8;
+  font-size: 0.83rem;
+}
+
+.attemptName small {
+  display: block;
+  margin-top: 3px;
+  color: #f87171;
+  font-size: 0.7rem;
+}
+
+.item strong {
+  color: #fca5a5;
+  font-size: 0.83rem;
+  white-space: nowrap;
+}
+
+.item strong[data-passed='true'] {
+  color: #6ee7b7;
+}

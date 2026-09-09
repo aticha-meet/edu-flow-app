@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import {
   getTestById,
   getMyAttempts,
@@ -11,7 +12,9 @@ import {
 import type { TestWithQuestions, AttemptSummary } from '@/types/test-type';
 import styles from '@/app/(main)/exam/exam.module.scss';
 import { ScoreRing } from '@/components/exam/ScoreRing';
-import useUserStore from '@/store/userStore';
+import { ExamAttemptHistory } from '@/components/exam/ExamAttemptHistory';
+import { ExamErrorState, ExamLoadingState } from '@/components/exam/ExamPageState';
+import { ExamQuestionCard } from '@/components/exam/ExamQuestionCard';
 
 // ─── Types ────────────────────────────────────────────────────────
 type SelectedAnswers = Record<string, string>; // questionId → choiceId
@@ -183,9 +186,8 @@ export default function TestExamPage() {
   const router = useRouter();
   const testId = params?.id as string;
 
-  // User session
-  const session = useUserStore((s: any) => s.session) as { id: string } | null;
-  const studentId = session?.id ?? '';
+  const { data: session, status: sessionStatus } = useSession();
+  const studentId = (session?.user as { id?: string } | undefined)?.id ?? '';
 
   const [test, setTest] = useState<TestWithQuestions | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -209,8 +211,16 @@ export default function TestExamPage() {
 
   // ─── Fetch test + past attempts ──────────────────────────────
   const fetchTestAndAttempts = useCallback(async () => {
-    if (!testId || !studentId) return;
+    if (!testId || sessionStatus === 'loading') return;
+
+    if (!studentId) {
+      setFetchError('ไม่พบข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบใหม่แล้วลองอีกครั้ง');
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
+    setFetchError('');
     try {
       const [data, attempts] = await Promise.all([
         getTestById(testId),
@@ -229,7 +239,7 @@ export default function TestExamPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [testId, studentId]);
+  }, [testId, studentId, sessionStatus]);
 
   useEffect(() => {
     fetchTestAndAttempts();
@@ -396,29 +406,14 @@ export default function TestExamPage() {
     return (
       <div className={styles.page}>
         <main className={styles.main}>
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              minHeight: '60vh',
-              gap: 16,
-              color: '#64748b',
-            }}
-          >
-            <div
-              style={{
-                width: 40,
-                height: 40,
-                border: '3px solid rgba(99,102,241,0.15)',
-                borderTopColor: '#6366f1',
-                borderRadius: '50%',
-                animation: 'spin 0.8s linear infinite',
-              }}
-            />
-            <p style={{ margin: 0 }}>กำลังโหลดแบบทดสอบ...</p>
-          </div>
+          <ExamLoadingState
+            title={sessionStatus === 'loading' ? 'กำลังตรวจสอบบัญชีผู้ใช้' : undefined}
+            detail={
+              sessionStatus === 'loading'
+                ? 'กำลังยืนยันสิทธิ์ก่อนเปิดข้อสอบ'
+                : undefined
+            }
+          />
         </main>
       </div>
     );
@@ -428,22 +423,11 @@ export default function TestExamPage() {
     return (
       <div className={styles.page}>
         <main className={styles.main}>
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              minHeight: '60vh',
-              gap: 16,
-              color: '#64748b',
-            }}
-          >
-            <p style={{ margin: 0 }}>{fetchError || 'ไม่พบแบบทดสอบ'}</p>
-            <button className={styles.retryBtn} onClick={() => router.back()}>
-              ← กลับ
-            </button>
-          </div>
+          <ExamErrorState
+            message={fetchError || 'ไม่พบแบบทดสอบ'}
+            onRetry={fetchTestAndAttempts}
+            onBack={() => router.back()}
+          />
         </main>
       </div>
     );
@@ -451,6 +435,21 @@ export default function TestExamPage() {
 
   const questions = test.questions;
   const totalQuestions = questions.length;
+
+  if (totalQuestions === 0) {
+    return (
+      <div className={styles.page}>
+        <main className={styles.main}>
+          <ExamErrorState
+            message="แบบทดสอบนี้ยังไม่มีข้อคำถาม"
+            onRetry={fetchTestAndAttempts}
+            onBack={() => router.back()}
+          />
+        </main>
+      </div>
+    );
+  }
+
   const answeredCount = Object.keys(selectedAnswers).length;
   const progress = (answeredCount / totalQuestions) * 100;
 
@@ -491,66 +490,7 @@ export default function TestExamPage() {
                 คุณทำแบบทดสอบนี้ครบ {MAX_ATTEMPTS} ครั้งแล้ว
               </p>
 
-              {/* ประวัติคะแนน */}
-              {pastAttempts.length > 0 && (
-                <div
-                  style={{
-                    width: '100%',
-                    marginTop: 24,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 10,
-                  }}
-                >
-                  {pastAttempts.map((a) => {
-                    const pct =
-                      a.totalQuestions > 0 && a.score !== null
-                        ? Math.round((a.score / a.totalQuestions) * 100)
-                        : null;
-                    return (
-                      <div
-                        key={a.id}
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          padding: '12px 16px',
-                          background: 'rgba(255,255,255,0.03)',
-                          border: '1px solid rgba(255,255,255,0.07)',
-                          borderRadius: 10,
-                        }}
-                      >
-                        <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
-                          ครั้งที่ {a.attemptNumber}
-                          {a.submittedByCheat && (
-                            <span
-                              style={{
-                                marginLeft: 8,
-                                color: '#f87171',
-                                fontSize: '0.75rem',
-                                fontWeight: 600,
-                              }}
-                            >
-                              (ส่งอัตโนมัติเนื่องจากโกง)
-                            </span>
-                          )}
-                        </span>
-                        <span
-                          style={{
-                            color:
-                              pct !== null && pct >= 60 ? '#6ee7b7' : '#fca5a5',
-                            fontWeight: 700,
-                          }}
-                        >
-                          {a.score !== null
-                            ? `${a.score}/${a.totalQuestions} (${pct}%)`
-                            : 'ไม่มีข้อมูล'}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+              <ExamAttemptHistory attempts={pastAttempts} title="ประวัติคะแนน" />
             </div>
             <div className={styles.resultActions}>
               <button
@@ -632,79 +572,7 @@ export default function TestExamPage() {
                 </div>
               </div>
 
-              {/* ประวัติ attempt ก่อนหน้า (ถ้ามี) */}
-              {pastAttempts.length > 0 && (
-                <div
-                  style={{
-                    width: '100%',
-                    marginTop: 20,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 8,
-                  }}
-                >
-                  <p
-                    style={{
-                      margin: '0 0 6px',
-                      fontSize: '0.78rem',
-                      color: '#64748b',
-                      fontWeight: 600,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.04em',
-                    }}
-                  >
-                    ประวัติการทำ
-                  </p>
-                  {pastAttempts.map((a) => {
-                    const pct =
-                      a.totalQuestions > 0 && a.score !== null
-                        ? Math.round((a.score / a.totalQuestions) * 100)
-                        : null;
-                    return (
-                      <div
-                        key={a.id}
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          padding: '10px 14px',
-                          background: 'rgba(255,255,255,0.02)',
-                          border: '1px solid rgba(255,255,255,0.06)',
-                          borderRadius: 8,
-                        }}
-                      >
-                        <span style={{ color: '#94a3b8', fontSize: '0.83rem' }}>
-                          ครั้งที่ {a.attemptNumber}
-                          {a.submittedByCheat && (
-                            <span
-                              style={{
-                                marginLeft: 8,
-                                color: '#f87171',
-                                fontSize: '0.72rem',
-                                fontWeight: 600,
-                              }}
-                            >
-                              (ส่งอัตโนมัติเนื่องจากโกง)
-                            </span>
-                          )}
-                        </span>
-                        <span
-                          style={{
-                            color:
-                              pct !== null && pct >= 60 ? '#6ee7b7' : '#fca5a5',
-                            fontWeight: 700,
-                            fontSize: '0.83rem',
-                          }}
-                        >
-                          {a.score !== null
-                            ? `${a.score}/${a.totalQuestions} (${pct}%)`
-                            : '-'}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+              <ExamAttemptHistory attempts={pastAttempts} />
 
               {/* คำเตือน anti-cheat */}
               <div
@@ -1326,44 +1194,17 @@ export default function TestExamPage() {
           })}
         </div>
 
-        {/* Question Card */}
-        <div className={styles.questionCard}>
-          <div className={styles.questionNumber}>{currentQuestion + 1}</div>
-          <p className={styles.questionText}>{currentQ.questionText}</p>
-          <div className={styles.answerList}>
-            {currentQ.choices.map((choice) => {
-              const isSelected = selectedAnswers[currentQ.id] === choice.id;
-              return (
-                <div
-                  key={choice.id}
-                  className={
-                    isSelected
-                      ? styles.answerOptionSelected
-                      : styles.answerOption
-                  }
-                  onClick={() =>
-                    setSelectedAnswers((prev) => ({
-                      ...prev,
-                      [currentQ.id]: choice.id,
-                    }))
-                  }
-                  id={`answer-${currentQ.id}-${choice.id}`}
-                >
-                  <div
-                    className={
-                      isSelected
-                        ? styles.radioCircleSelected
-                        : styles.radioCircle
-                    }
-                  >
-                    {isSelected && <span className={styles.radioDot} />}
-                  </div>
-                  <span className={styles.answerText}>{choice.value}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <ExamQuestionCard
+          question={currentQ}
+          questionNumber={currentQuestion + 1}
+          selectedChoiceId={selectedAnswers[currentQ.id]}
+          onSelect={(choiceId) =>
+            setSelectedAnswers((previousAnswers) => ({
+              ...previousAnswers,
+              [currentQ.id]: choiceId,
+            }))
+          }
+        />
 
         {/* Navigation */}
         <div className={styles.navButtons}>

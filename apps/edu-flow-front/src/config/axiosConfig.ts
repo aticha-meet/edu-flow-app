@@ -1,9 +1,10 @@
 import axios from 'axios';
 import { getSession } from 'next-auth/react';
+import { PAGE_PATH } from '@/config/pagePath';
 
 // ชี้ไปที่ Express API (http://localhost:3333)
 const axiosInstance = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_ENDPOINT_URL || '',
+    baseURL: PAGE_PATH.API_URL,
     timeout: 10000,
     withCredentials: true,
     headers: {

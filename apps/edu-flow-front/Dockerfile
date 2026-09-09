@@ -14,6 +14,11 @@ ENV NEXT_PUBLIC_AUTH_URL=${NEXT_PUBLIC_AUTH_URL}
 ARG NEXT_PUBLIC_ENDPOINT_URL
 ENV NEXT_PUBLIC_ENDPOINT_URL=${NEXT_PUBLIC_ENDPOINT_URL}
 
+# Client-side environment variables are embedded during next build.
+# Docker deployments use the production URL fallback from apps/edu-flow-front/.env.
+ARG NEXT_PUBLIC_IS_PRODUCTION=true
+ENV NEXT_PUBLIC_IS_PRODUCTION=${NEXT_PUBLIC_IS_PRODUCTION}
+
 # ปิด nx daemon และ cache เพราะมีปัญหา SQLite I/O ใน container
 ENV NX_DAEMON=false
 ENV NX_SKIP_NX_CACHE=true
@@ -31,5 +36,6 @@ COPY --from=base /repo/apps/edu-flow-front/.next/static ./apps/edu-flow-front/.n
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
+ENV NEXT_PUBLIC_IS_PRODUCTION=true
 
-CMD ["node", "apps/edu-flow-front/server.js"]   
+CMD ["node", "apps/edu-flow-front/server.js"]

@@ -13,6 +13,7 @@ services:
     ports:
       - '3000:3000'
     environment:
+      - NEXT_PUBLIC_IS_PRODUCTION=true
       - NEXT_PUBLIC_AUTH_URL=${NEXT_PUBLIC_AUTH_URL}
       - NEXT_PUBLIC_ENDPOINT_URL=${NEXT_PUBLIC_ENDPOINT_URL}
       - NEXTAUTH_URL=${NEXTAUTH_URL}
