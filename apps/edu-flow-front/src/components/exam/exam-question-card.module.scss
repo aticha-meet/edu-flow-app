@@ -24,6 +24,7 @@
   font-size: 1.05rem;
   font-weight: 600;
   line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 
 .answers {
@@ -48,6 +49,11 @@
   text-align: left;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.answer > span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .answer:hover {

@@ -187,44 +187,76 @@ export const CourseSidebar = ({
     },
   ];
 
+  const routes: Record<MenuKey, string> = {
+    syllabus: `/course/${courseId}`,
+    test: `/course/${courseId}/test`,
+    'test-manage': `/course/${courseId}/test/manage`,
+    'test-dashboard': `/course/${courseId}/test/dashboard`,
+    'manage-students': `/course/${courseId}/students`,
+    settings: `/course/${courseId}/settings`,
+  };
+
+  const visibleMenuItems = menuItems.filter((item) => !item.hide);
+
+  const navigateTo = (key: MenuKey) => {
+    router.push(routes[key]);
+  };
+
   return (
-    <aside className={styles.sidebar} aria-label="Course navigation">
-      {/* Banner */}
-      <div className={styles.courseBanner}>
-        <div className={styles.bannerBg} />
-        <div className={styles.bannerPattern} />
-        <div className={styles.bannerContent}>
-          <h2 className={styles.courseCode}>{courseCode || '—'}</h2>
-          <p className={styles.courseName}>{courseName || 'รายวิชา'}</p>
-        </div>
+    <>
+      <div className={styles.mobileCourseNav} aria-label="Course navigation">
+        <details className={styles.mobileCourseDetails}>
+          <summary className={styles.mobileCourseSummary}>
+            <span>
+              <span className={styles.mobileCourseSummaryLabel}>เมนูรายวิชา</span>
+              <span className={styles.mobileCourseSummaryValue}>
+                {visibleMenuItems.find((item) => item.key === activeMenu)?.label ?? 'เลือกเมนู'}
+              </span>
+            </span>
+            <span className={styles.mobileCourseChevron} aria-hidden="true">⌄</span>
+          </summary>
+          <nav className={styles.mobileCourseMenu} aria-label="Mobile course navigation">
+            {visibleMenuItems.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                className={`${styles.mobileCourseButton} ${activeMenu === item.key ? styles.mobileCourseButtonActive : ''}`}
+                onClick={() => navigateTo(item.key)}
+                aria-current={activeMenu === item.key ? 'page' : undefined}
+              >
+                <span className={styles.navIcon}>{item.icon}</span>
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </nav>
+        </details>
       </div>
 
-      {/* Section Label */}
-      <div className={styles.sectionLabel}>เมนูรายวิชา</div>
+      <aside className={styles.sidebar} aria-label="Course navigation">
+        {/* Banner */}
+        <div className={styles.courseBanner}>
+          <div className={styles.bannerBg} />
+          <div className={styles.bannerPattern} />
+          <div className={styles.bannerContent}>
+            <h2 className={styles.courseCode}>{courseCode || '—'}</h2>
+            <p className={styles.courseName}>{courseName || 'รายวิชา'}</p>
+          </div>
+        </div>
 
-      {/* Nav Menu */}
-      <ul className={styles.navMenu} role="menubar">
-        {menuItems
-          .filter((item) => !item.hide)
-          .map((item, idx) => (
+        {/* Section Label */}
+        <div className={styles.sectionLabel}>เมนูรายวิชา</div>
+
+        {/* Nav Menu */}
+        <ul className={styles.navMenu} role="menubar">
+          {visibleMenuItems.map((item, idx) => (
             <li key={item.key} className={styles.navItem} role="none">
               {idx > 0 && <div className={styles.navDivider} />}
               <button
+                type="button"
                 role="menuitem"
                 id={`sidebar-${item.key}`}
                 className={`${styles.navBtn} ${activeMenu === item.key ? styles.active : ''}`}
-                onClick={() => {
-                  const routes: Record<MenuKey, string> = {
-                    syllabus: `/course/${courseId}`,
-                    test: `/course/${courseId}/test`,
-                    'test-manage': `/course/${courseId}/test/manage`,
-                    'test-dashboard': `/course/${courseId}/test/dashboard`,
-                    'manage-students': `/course/${courseId}/students`,
-                    settings: `/course/${courseId}/settings`,
-                  };
-
-                  router.push(routes[item.key]);
-                }}
+                onClick={() => navigateTo(item.key)}
                 aria-current={activeMenu === item.key ? 'page' : undefined}
               >
                 <span className={styles.navIcon}>{item.icon}</span>
@@ -235,7 +267,8 @@ export const CourseSidebar = ({
               </button>
             </li>
           ))}
-      </ul>
-    </aside>
+        </ul>
+      </aside>
+    </>
   );
 };

@@ -15,6 +15,8 @@ import { ScoreRing } from '@/components/exam/ScoreRing';
 import { ExamAttemptHistory } from '@/components/exam/ExamAttemptHistory';
 import { ExamErrorState, ExamLoadingState } from '@/components/exam/ExamPageState';
 import { ExamQuestionCard } from '@/components/exam/ExamQuestionCard';
+import { ExamSecurityNotice } from '@/components/exam/ExamSecurityNotice';
+import { ExamTimer } from '@/components/exam/ExamTimer';
 
 // ─── Types ────────────────────────────────────────────────────────
 type SelectedAnswers = Record<string, string>; // questionId → choiceId
@@ -289,15 +291,6 @@ export default function TestExamPage() {
   }, [phase]);
 
   // ─── Helpers ─────────────────────────────────────────────────
-  const formatTime = (s: number) => {
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    const sec = s % 60;
-    if (h > 0)
-      return `${h}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
-    return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
-  };
-
   const calculateScore = (questions: TestWithQuestions['questions']) => {
     let correct = 0;
     for (const q of questions) {
@@ -1072,45 +1065,10 @@ export default function TestExamPage() {
   return (
     <div className={styles.page}>
       <main className={styles.main}>
-        {/* Anti-Cheat Guard Banner */}
-        {violations > 0 && (
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '10px 16px',
-                background: 'rgba(127,29,29,0.2)',
-                border: '1px solid rgba(239,68,68,0.4)',
-                borderRadius: 12,
-                color: '#fca5a5',
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                marginBottom: 20,
-                animation: 'pulseWarning 2s infinite',
-                boxShadow: '0 4px 12px rgba(220,38,38,0.15)',
-              }}
-            >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                <line x1="12" y1="9" x2="12" y2="13" />
-                <line x1="12" y1="17" x2="12.01" y2="17" />
-              </svg>
-              คำเตือน: ตรวจพบการสลับหน้าจอ {violations}/{MAX_VIOLATIONS} ครั้ง
-              (หากครบจะถูกส่งข้อสอบทันที)
-            </div>
-          </div>
-        )}
+        <ExamSecurityNotice
+          violations={violations}
+          maxViolations={MAX_VIOLATIONS}
+        />
 
         {/* Exam Header */}
         <div className={styles.examHeader}>
@@ -1138,25 +1096,7 @@ export default function TestExamPage() {
           </p>
         </div>
 
-        {/* Timer */}
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <div
-            className={`${styles.timerContainer} ${timeLeft < 60 ? styles.timerWarning : ''}`}
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-            <span className={styles.timerText}>{formatTime(timeLeft)}</span>
-          </div>
-        </div>
+        <ExamTimer seconds={timeLeft} />
 
         {/* Progress */}
         <div className={styles.progressSection}>
